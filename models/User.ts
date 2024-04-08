@@ -1,10 +1,12 @@
-const crypto = require('crypto');
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const randomize = require('randomatic');
+import crypto from 'crypto';
+import {Schema, Model, InferSchemaType} from 'mongoose';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-const UserSchema = new mongoose.Schema({
+/**
+ * schema of user, same js model changed from mongoose.schema to Schema due to import
+ */
+const UserSchema = new Schema({
   name: {
     type: String,
     required: [true, 'Please add a name'],
@@ -58,14 +60,6 @@ UserSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Encrypt password using bcrypt while updating (admin)
-UserSchema.pre("findOneAndUpdate", async function (next) {
-  if (this._update.password) {
-    this._update.password = await bcrypt.hash(this._update.password, 10);
-  }
-  next();
-});
-
 // Sign JWT and return
 UserSchema.methods.getSignedJwtToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
@@ -110,4 +104,10 @@ UserSchema.methods.generateEmailConfirmToken = function (next) {
   return confirmTokenCombined;
 };
 
-module.exports = mongoose.model('User', UserSchema);
+
+/**
+ * creates the type User using the Schema
+ */
+type User = InferSchemaType<typeof UserSchema>;
+
+export default new Model('User', UserSchema);
