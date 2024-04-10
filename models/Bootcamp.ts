@@ -1,8 +1,25 @@
-const mongoose = require('mongoose');
-const slugify = require('slugify');
-const geocoder = require('../utils/geocoder');
+import {Schema, Model, InferSchemaType} from'mongoose';
+import slugify from'slugify';
+import geocoder from'../utils/geocoder';
 
-const BootcampSchema = new mongoose.Schema(
+
+/**error: location doesn't show all the other fields
+ * 
+ * possible solutions: 
+ * -create type that extends mongoose.document and use Schema<CustomType>
+ * -create a schema that has the type of the location and add it to the existing schema
+ * 
+ * stuck:
+ * -is it worth creating a type: location for the sake of handling the schema? isn't there a better solution?
+ * doesn't schema only use types if they have the type where that subtype is forcely stated in the Schema<CustomType>?
+ * -is it worth creating a subschema?
+ * 
+ * by using online translations seems like the viable option is the first one stated (type extends mongoose.document)
+ * but that would lead to rewring the fields in the schema that would make the code messy due to not following DRY
+ * 
+ * and i would need to rewrite User.ts due to different translation approach (InferSchemaType)
+ * */
+const BootcampSchema = new Schema(
   {
     name: {
       type: String,
@@ -100,7 +117,7 @@ const BootcampSchema = new mongoose.Schema(
       default: Date.now
     },
     user: {
-      type: mongoose.Schema.ObjectId,
+      type: Schema.ObjectId,
       ref: 'User',
       required: true
     }
@@ -111,14 +128,19 @@ const BootcampSchema = new mongoose.Schema(
   }
 );
 
+
+type Bootcamp = InferSchemaType<typeof BootcampSchema>;
+const test: Bootcamp = {};
+test.location
+
 // Create bootcamp slug from the name
-BootcampSchema.pre('save', function(next) {
+BootcampSchema.pre<Bootcamp>('save', function(next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
 
 // Geocode & create location field
-BootcampSchema.pre('save', async function(next) {
+BootcampSchema.pre<Bootcamp>('save', async function(next) {
   const loc = await geocoder.geocode(this.address);
   this.location = {
     type: 'Point',
@@ -137,7 +159,7 @@ BootcampSchema.pre('save', async function(next) {
 });
 
 // Cascade delete courses when a bootcamp is deleted
-BootcampSchema.pre('remove', async function(next) {
+BootcampSchema.pre<Bootcamp>('remove', async function(next) {
   console.log(`Courses being removed from bootcamp ${this._id}`);
   await this.model('Course').deleteMany({ bootcamp: this._id });
   console.log(`Reviews being removed from bootcamp ${this._id}`);
@@ -153,4 +175,4 @@ BootcampSchema.virtual('courses', {
   justOne: false
 });
 
-module.exports = mongoose.model('Bootcamp', BootcampSchema);
+export default new Model('Bootcamp', BootcampSchema);

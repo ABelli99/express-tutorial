@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import {Schema, Model, InferSchemaType} from 'mongoose';
 
-const ReviewSchema = new mongoose.Schema({
+const ReviewSchema = new Schema({
   title: {
     type: String,
     trim: true,
@@ -56,7 +56,7 @@ ReviewSchema.statics.getAverageRating = async function(bootcampId) {
         averageRating: obj[0].averageRating.toFixed(1),
       });
     } else {
-      await this.model("Bootcamp").findByIdAndUpdate(bootcampId, {
+      await Bootcamp.findByIdAndUpdate(bootcampId, {
         averageRating: undefined,
       });
     }
@@ -75,4 +75,9 @@ ReviewSchema.post('remove', async function() {
   await this.constructor.getAverageRating(this.bootcamp);
 });
 
-module.exports = mongoose.model('Review', ReviewSchema);
+/**
+ * creates the type User using the Schema
+ */
+type Review = InferSchemaType<typeof ReviewSchema>;
+
+export default new Model('Review', ReviewSchema);

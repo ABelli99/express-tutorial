@@ -104,9 +104,7 @@ UserSchema.methods.generateEmailConfirmToken = function (next) {
   return confirmTokenCombined;
 };
 
-
-/**
- * creates the type User using the Schema
+/**creates the type User using the Schema
  */
 type User = InferSchemaType<typeof UserSchema>;
 
