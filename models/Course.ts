@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import {Mongoose, Schema, Model, InferSchemaType} from'mongoose';
 
-const CourseSchema = new mongoose.Schema({
+const CourseSchema = new Schema({
   title: {
     type: String,
     trim: true,
@@ -32,19 +32,22 @@ const CourseSchema = new mongoose.Schema({
     default: Date.now
   },
   bootcamp: {
-    type: mongoose.Schema.ObjectId,
+    type: Schema.ObjectId,
     ref: 'Bootcamp',
     required: true
   },
   user: {
-    type: mongoose.Schema.ObjectId,
+    type: Schema.ObjectId,
     ref: 'User',
     required: true
-  }
+  },
+  getAverageCost: function()
 });
 
+type Course = InferSchemaType<typeof CourseSchema>;
+
 // Static method to get avg of course tuitions
-CourseSchema.statics.getAverageCost = async function(bootcampId) {
+CourseSchema.statics.getAverageCost = async function(bootcampId: Schema.Types.ObjectId) {
   const obj = await this.aggregate([
     {
       $match: { bootcamp: bootcampId }
@@ -70,20 +73,20 @@ CourseSchema.statics.getAverageCost = async function(bootcampId) {
 };
 
 // Call getAverageCost after save
-CourseSchema.post('save', async function() {
+CourseSchema.post<Course>('save', async function() {
   await this.constructor.getAverageCost(this.bootcamp);
 });
 
 // Call getAverageCost after remove
-CourseSchema.post('remove', async function () {
+CourseSchema.post<Course>('remove', async function () {
   await this.constructor.getAverageCost(this.bootcamp);
 });
 
 // Call getAverageCost after tuition update
-CourseSchema.post("findOneAndUpdate", async function (doc) {
+CourseSchema.post<Course>("findOneAndUpdate", async function (doc: Course) {
   if (this.tuition != doc.tuition) {
     await doc.constructor.getAverageCost(doc.bootcamp);
   }
 });
 
-module.exports = mongoose.model('Course', CourseSchema);
+export default new Model('Course', CourseSchema);
