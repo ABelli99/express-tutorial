@@ -1,25 +1,42 @@
-import {Schema, Model, InferSchemaType} from'mongoose';
-import slugify from'slugify';
-import geocoder from'../utils/geocoder';
+import mongoose, { Document, Schema, Model } from 'mongoose';
+import slugify from 'slugify';
+import geocoder from '../utils/geocoder';
 
+import Course from './Course';
+import Review from './Review';
 
-/**error: location doesn't show all the other fields
- * 
- * possible solutions: 
- * -create type that extends mongoose.document and use Schema<CustomType>
- * -create a schema that has the type of the location and add it to the existing schema
- * 
- * stuck:
- * -is it worth creating a type: location for the sake of handling the schema? isn't there a better solution?
- * doesn't schema only use types if they have the type where that subtype is forcely stated in the Schema<CustomType>?
- * -is it worth creating a subschema?
- * 
- * by using online translations seems like the viable option is the first one stated (type extends mongoose.document)
- * but that would lead to rewring the fields in the schema that would make the code messy due to not following DRY
- * 
- * and i would need to rewrite User.ts due to different translation approach (InferSchemaType)
- * */
-const BootcampSchema = new Schema(
+interface Bootcamp extends Document {
+  _id: Schema.Types.ObjectId
+  name: string;
+  slug: string;
+  description: string;
+  website: string;
+  phone: string;
+  email: string;
+  address: string | undefined;
+  location: {
+    type: string;
+    coordinates: number[];
+    formattedAddress: string;
+    street: string;
+    city: string;
+    state: string;
+    zipcode: string;
+    country: string;
+  };
+  careers: string[];
+  averageRating: number;
+  averageCost: number;
+  photo: string;
+  housing: boolean;
+  jobAssistance: boolean;
+  jobGuarantee: boolean;
+  acceptGi: boolean;
+  createdAt: Date;
+  user: mongoose.Schema.Types.ObjectId;
+}
+
+const BootcampSchema: Schema<Bootcamp> = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -117,7 +134,7 @@ const BootcampSchema = new Schema(
       default: Date.now
     },
     user: {
-      type: Schema.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true
     }
@@ -127,18 +144,11 @@ const BootcampSchema = new Schema(
     toObject: { virtuals: true }
   }
 );
-
-
-type Bootcamp = InferSchemaType<typeof BootcampSchema>;
-const test: Bootcamp = {};
-test.location
-
 // Create bootcamp slug from the name
 BootcampSchema.pre<Bootcamp>('save', function(next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
-
 // Geocode & create location field
 BootcampSchema.pre<Bootcamp>('save', async function(next) {
   const loc = await geocoder.geocode(this.address);
@@ -152,18 +162,21 @@ BootcampSchema.pre<Bootcamp>('save', async function(next) {
     zipcode: loc[0].zipcode,
     country: loc[0].countryCode
   };
-
   // Do not save address in DB
   this.address = undefined;
   next();
 });
 
 // Cascade delete courses when a bootcamp is deleted
-BootcampSchema.pre<Bootcamp>('remove', async function(next) {
-  console.log(`Courses being removed from bootcamp ${this._id}`);
-  await this.model('Course').deleteMany({ bootcamp: this._id });
-  console.log(`Reviews being removed from bootcamp ${this._id}`);
-   await this.model('Review').deleteMany({ bootcamp: this._id });
+BootcampSchema.pre('deleteOne', async function(next: Function) {
+
+  const bootcampId = await this.getQuery()._id;
+
+  console.log(`Courses being removed from bootcamp ${bootcampId}`);
+  await Course.deleteMany({ bootcamp: bootcampId });
+
+  console.log(`Reviews being removed from bootcamp ${bootcampId}`);
+  await Review.deleteMany({ bootcamp: bootcampId });
   next();
 });
 
@@ -175,4 +188,6 @@ BootcampSchema.virtual('courses', {
   justOne: false
 });
 
-export default new Model('Bootcamp', BootcampSchema);
+const BootcampModel: Model<Bootcamp> = mongoose.model<Bootcamp>('Bootcamp', BootcampSchema);
+
+export default BootcampModel;
