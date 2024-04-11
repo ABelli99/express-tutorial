@@ -1,12 +1,29 @@
 import crypto from 'crypto';
-import {Schema, Model, InferSchemaType} from 'mongoose';
+import { Document, Model, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import randomize from 'randomatic';
 
-/**
- * schema of user, same js model changed from mongoose.schema to Schema due to import
- */
-const UserSchema = new Schema({
+interface User extends Document {
+  name: string;
+  email: string;
+  role: string;
+  password: string;
+  resetPasswordToken: string;
+  resetPasswordExpire: Date;
+  confirmEmailToken: string;
+  isEmailConfirmed: boolean;
+  twoFactorCode: string;
+  twoFactorCodeExpire: Date;
+  twoFactorEnable: boolean;
+  createdAt: Date;
+  getSignedJwtToken(): string;
+  matchPassword(enteredPassword: string): Promise<boolean>;
+  getResetPasswordToken(): string;
+  generateEmailConfirmToken(): string;
+}
+
+const UserSchema: Schema<User> = new Schema({
   name: {
     type: String,
     required: [true, 'Please add a name'],
@@ -61,19 +78,21 @@ UserSchema.pre('save', async function (next) {
 });
 
 // Sign JWT and return
-UserSchema.methods.getSignedJwtToken = function () {
+UserSchema.methods.getSignedJwtToken = function (): string {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
 };
 
 // Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function (enteredPassword) {
+UserSchema.methods.matchPassword = async function (
+  enteredPassword: string
+): Promise<boolean> {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
 // Generate and hash password token
-UserSchema.methods.getResetPasswordToken = function () {
+UserSchema.methods.getResetPasswordToken = function (): string {
   // Generate token
   const resetToken = crypto.randomBytes(20).toString('hex');
 
@@ -90,7 +109,7 @@ UserSchema.methods.getResetPasswordToken = function () {
 };
 
 // Generate email confirm token
-UserSchema.methods.generateEmailConfirmToken = function (next) {
+UserSchema.methods.generateEmailConfirmToken = function (): string {
   // email confirmation token
   const confirmationToken = crypto.randomBytes(20).toString('hex');
 
@@ -104,8 +123,5 @@ UserSchema.methods.generateEmailConfirmToken = function (next) {
   return confirmTokenCombined;
 };
 
-/**creates the type User using the Schema
- */
-type User = InferSchemaType<typeof UserSchema>;
-
-export default new Model('User', UserSchema);
+const User: Model<User> = new Model('User', UserSchema);
+export default User;
