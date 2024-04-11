@@ -1,6 +1,20 @@
-import {Mongoose, Schema, Model, InferSchemaType} from'mongoose';
+import { Document, Model, Schema } from 'mongoose';
 
-const CourseSchema = new Schema({
+import Bootcamp from './Bootcamp';
+interface Course extends Document {
+  title: string;
+  description: string;
+  weeks: string;
+  tuition: number;
+  minimumSkill: string;
+  scholarshipAvailable: boolean;
+  createdAt: Date;
+  bootcamp: Schema.Types.ObjectId;
+  user: Schema.Types.ObjectId;
+  getAverageCost(bootcampId: Schema.Types.ObjectId): number;
+}
+
+const CourseSchema: Schema<Course> = new Schema({
   title: {
     type: String,
     trim: true,
@@ -32,61 +46,61 @@ const CourseSchema = new Schema({
     default: Date.now
   },
   bootcamp: {
-    type: Schema.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Bootcamp',
     required: true
   },
   user: {
-    type: Schema.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
-  getAverageCost: function()
+  }
 });
 
-type Course = InferSchemaType<typeof CourseSchema>;
-
 // Static method to get avg of course tuitions
-CourseSchema.statics.getAverageCost = async function(bootcampId: Schema.Types.ObjectId) {
-  const obj = await this.aggregate([
-    {
-      $match: { bootcamp: bootcampId }
-    },
-    {
-      $group: {
-        _id: '$bootcamp',
-        averageCost: { $avg: '$tuition' }
+CourseSchema.static('getAverageCost', 
+  async function(bootcampId: Schema.Types.ObjectId) {
+    const obj = await this.aggregate([
+      {
+        $match: { bootcamp: bootcampId }
+      },
+      {
+        $group: {
+          _id: '$bootcamp',
+          averageCost: { $avg: '$tuition' }
+        }
       }
-    }
-  ]);
+    ]);
 
-  const averageCost = obj[0]
-    ? Math.ceil(obj[0].averageCost / 10) * 10
-    : undefined;
-  try {
-    await this.model("Bootcamp").findByIdAndUpdate(bootcampId, {
-      averageCost,
-    });
-  } catch (err) {
-    console.log(err);
+    const averageCost = obj[0]
+      ? Math.ceil(obj[0].averageCost / 10) * 10
+      : undefined;
+    try {
+      await Bootcamp.findByIdAndUpdate(bootcampId, {
+        averageCost,
+      });
+    } catch (err) {
+      console.log(err);
+    }
   }
-};
+);
 
 // Call getAverageCost after save
 CourseSchema.post<Course>('save', async function() {
-  await this.constructor.getAverageCost(this.bootcamp);
+  await this.getAverageCost(this.bootcamp);
 });
 
 // Call getAverageCost after remove
-CourseSchema.post<Course>('remove', async function () {
-  await this.constructor.getAverageCost(this.bootcamp);
+CourseSchema.post<Course>('deleteOne', async function () {
+  await this.getAverageCost(this.bootcamp);
 });
 
 // Call getAverageCost after tuition update
-CourseSchema.post<Course>("findOneAndUpdate", async function (doc: Course) {
+CourseSchema.post<Course>('findOneAndUpdate', async function (doc: Course) {
   if (this.tuition != doc.tuition) {
-    await doc.constructor.getAverageCost(doc.bootcamp);
+    await doc.getAverageCost(doc.bootcamp);
   }
 });
 
-export default new Model('Course', CourseSchema);
+const Course: Model<Course> = new Model('Course', CourseSchema);
+export default Course;
