@@ -1,6 +1,18 @@
-import {Schema, Model, InferSchemaType} from 'mongoose';
+import mongoose, { Model, Schema } from 'mongoose';
 
-const ReviewSchema = new Schema({
+import Bootcamp from './Bootcamp';
+
+interface Review extends mongoose.Document {
+  title: string;
+  text: string;
+  rating: number;
+  createdAt: Date;
+  bootcamp: Schema.Types.ObjectId;
+  user: Schema.Types.ObjectId;
+  getAverageRating(bootcampId:  Schema.Types.ObjectId): number | undefined;
+}
+
+const ReviewSchema: Schema<Review> = new Schema({
   title: {
     type: String,
     trim: true,
@@ -22,12 +34,12 @@ const ReviewSchema = new Schema({
     default: Date.now
   },
   bootcamp: {
-    type: mongoose.Schema.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Bootcamp',
     required: true
   },
   user: {
-    type: mongoose.Schema.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   }
@@ -37,7 +49,7 @@ const ReviewSchema = new Schema({
 ReviewSchema.index({ bootcamp: 1, user: 1 }, { unique: true });
 
 // Static method to get avg rating and save
-ReviewSchema.statics.getAverageRating = async function(bootcampId: Schema.Types.ObjectId) {
+ReviewSchema.static('getAverageRating', async function(bootcampId:  Schema.Types.ObjectId) {
   const obj = await this.aggregate([
     {
       $match: { bootcamp: bootcampId }
@@ -50,9 +62,9 @@ ReviewSchema.statics.getAverageRating = async function(bootcampId: Schema.Types.
     }
   ]);
 
- try {
+  try {
     if (obj[0]) {
-      await this.model("Bootcamp").findByIdAndUpdate(bootcampId, {
+      await Bootcamp.findByIdAndUpdate(bootcampId, {
         averageRating: obj[0].averageRating.toFixed(1),
       });
     } else {
@@ -63,21 +75,18 @@ ReviewSchema.statics.getAverageRating = async function(bootcampId: Schema.Types.
   }  catch (err) {
     console.error(err);
   }
-};
+});
 
 // Call getAverageCost after save
 ReviewSchema.post('save', async function() {
-  await this.constructor.getAverageRating(this.bootcamp);
+  await this.getAverageRating(this.bootcamp);
 });
 
 // Call getAverageCost before remove
-ReviewSchema.post('remove', async function() {
-  await this.constructor.getAverageRating(this.bootcamp);
+ReviewSchema.post<Review>('deleteOne', async function() {
+  await this.getAverageRating(this.bootcamp);
 });
 
-/**
- * creates the type User using the Schema
- */
-type Review = InferSchemaType<typeof ReviewSchema>;
+const ReviewModel: Model<Review> = mongoose.model('Review', ReviewSchema);
 
-export default new Model('Review', ReviewSchema);
+export default ReviewModel;
