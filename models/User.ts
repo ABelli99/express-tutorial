@@ -9,9 +9,9 @@ interface User extends mongoose.Document {
   email: string;
   role: string;
   password: string;
-  resetPasswordToken: string;
-  resetPasswordExpire: Date;
-  confirmEmailToken: string;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
+  confirmEmailToken?: string;
   isEmailConfirmed: boolean;
   twoFactorCode: string;
   twoFactorCodeExpire: Date;

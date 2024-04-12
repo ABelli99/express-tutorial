@@ -5,33 +5,14 @@ import asyncHandler from '../middleware/async';
 import sendEmail from '../utils/sendEmail';
 import User from '../models/User';
 
-interface RegisterRequest extends Request {
-  body: {
-    name: string;
-    email: string;
-    password: string;
-    role: string;
-  };
-}
-
 // @desc      Register user
 // @route     POST /api/v1/auth/register
 // @access    Public
-export const register = asyncHandler(
-  async (
-    req: RegisterRequest, 
-    res: Response, 
-    next: NextFunction
-  ) => {
-  const { 
-    name, 
-    email, 
-    password, 
-    role 
-  } = req.body;
+export const register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const { name, email, password, role } = req.body;
 
   // Create user
-  const user: User = await User.create({
+  const user = await User.create({
     name,
     email,
     password,
@@ -62,7 +43,7 @@ export const register = asyncHandler(
 // @desc      Login user
 // @route     POST /api/v1/auth/login
 // @access    Public
-exports.login = asyncHandler(async (req, res, next) => {
+export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
 
   // Validate emil & password
@@ -90,7 +71,7 @@ exports.login = asyncHandler(async (req, res, next) => {
 // @desc      Log user out / clear cookie
 // @route     GET /api/v1/auth/logout
 // @access    Public
-exports.logout = asyncHandler(async (req, res, next) => {
+export const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
@@ -105,7 +86,7 @@ exports.logout = asyncHandler(async (req, res, next) => {
 // @desc      Get current logged in user
 // @route     GET /api/v1/auth/me
 // @access    Private
-exports.getMe = asyncHandler(async (req, res, next) => {
+export const getMe = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   // user is already available in req due to the protect middleware
   const user = req.user;
 
@@ -118,7 +99,7 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 // @desc      Update user details
 // @route     PUT /api/v1/auth/updatedetails
 // @access    Private
-exports.updateDetails = asyncHandler(async (req, res, next) => {
+export const updateDetails = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const fieldsToUpdate = {
     name: req.body.name,
     email: req.body.email,
@@ -138,8 +119,13 @@ exports.updateDetails = asyncHandler(async (req, res, next) => {
 // @desc      Update password
 // @route     PUT /api/v1/auth/updatepassword
 // @access    Private
-exports.updatePassword = asyncHandler(async (req, res, next) => {
+export const updatePassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const user = await User.findById(req.user.id).select('+password');
+
+  // Check if user exists
+  if(!user){
+    return next(new ErrorResponse('User not found', 404));
+  }
 
   // Check current password
   if (!(await user.matchPassword(req.body.currentPassword))) {
@@ -155,7 +141,7 @@ exports.updatePassword = asyncHandler(async (req, res, next) => {
 // @desc      Forgot password
 // @route     POST /api/v1/auth/forgotpassword
 // @access    Public
-exports.forgotPassword = asyncHandler(async (req, res, next) => {
+export const forgotPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const user = await User.findOne({ email: req.body.email });
 
   if (!user) {
@@ -196,7 +182,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 // @desc      Reset password
 // @route     PUT /api/v1/auth/resetpassword/:resettoken
 // @access    Public
-exports.resetPassword = asyncHandler(async (req, res, next) => {
+export const resetPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   // Get hashed token
   const resetPasswordToken = crypto
     .createHash('sha256')
@@ -226,7 +212,7 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
  * @route   GET /api/v1/auth/confirmemail
  * @access  Public
  */
-exports.confirmEmail = asyncHandler(async (req, res, next) => {
+export const confirmEmail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   // grab token from email
   const { token } = req.query;
 
@@ -262,13 +248,15 @@ exports.confirmEmail = asyncHandler(async (req, res, next) => {
 });
 
 // Get token from model, create cookie and send response
-const sendTokenResponse = (user, statusCode, res) => {
+const sendTokenResponse = (user: any, statusCode: number, res: Response) => {
   // Create token
   const token = user.getSignedJwtToken();
 
-  const options = {
+  const options: any = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000,
+      Date.now() 
+      + Number.parseInt(process.env.JWT_COOKIE_EXPIRE ? process.env.JWT_COOKIE_EXPIRE : '0') 
+      * 24 * 60 * 60 * 1000,
     ),
     httpOnly: true,
   };
