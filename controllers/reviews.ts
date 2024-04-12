@@ -1,13 +1,14 @@
-const ErrorResponse = require('../utils/errorResponse');
-const asyncHandler = require('../middleware/async');
-const Review = require('../models/Review');
-const Bootcamp = require('../models/Bootcamp');
+import { Request, Response, NextFunction } from 'express';
+import ErrorResponse from '../utils/errorResponse';
+import asyncHandler from '../middleware/async';
+import Review from '../models/Review';
+import Bootcamp from '../models/Bootcamp';
 
 // @desc      Get reviews
 // @route     GET /api/v1/reviews
 // @route     GET /api/v1/bootcamps/:bootcampId/reviews
 // @access    Public
-exports.getReviews = asyncHandler(async (req, res, next) => {
+export const getReviews = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   if (req.params.bootcampId) {
     const reviews = await Review.find({ bootcamp: req.params.bootcampId });
 
@@ -24,7 +25,7 @@ exports.getReviews = asyncHandler(async (req, res, next) => {
 // @desc      Get single review
 // @route     GET /api/v1/reviews/:id
 // @access    Public
-exports.getReview = asyncHandler(async (req, res, next) => {
+export const getReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const review = await Review.findById(req.params.id).populate({
     path: 'bootcamp',
     select: 'name description'
@@ -45,7 +46,7 @@ exports.getReview = asyncHandler(async (req, res, next) => {
 // @desc      Add review
 // @route     POST /api/v1/bootcamps/:bootcampId/reviews
 // @access    Private
-exports.addReview = asyncHandler(async (req, res, next) => {
+export const addReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   req.body.bootcamp = req.params.bootcampId;
   req.body.user = req.user.id;
 
@@ -71,7 +72,7 @@ exports.addReview = asyncHandler(async (req, res, next) => {
 // @desc      Update review
 // @route     PUT /api/v1/reviews/:id
 // @access    Private
-exports.updateReview = asyncHandler(async (req, res, next) => {
+export const updateReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   let review = await Review.findById(req.params.id);
 
   if (!review) {
@@ -90,6 +91,12 @@ exports.updateReview = asyncHandler(async (req, res, next) => {
     runValidators: true
   });
 
+  if (!review) {
+    return next(
+      new ErrorResponse(`No review with the id of ${req.params.id}`, 404)
+    );
+  }
+
   review.save();
 
   res.status(200).json({
@@ -101,7 +108,7 @@ exports.updateReview = asyncHandler(async (req, res, next) => {
 // @desc      Delete review
 // @route     DELETE /api/v1/reviews/:id
 // @access    Private
-exports.deleteReview = asyncHandler(async (req, res, next) => {
+export const deleteReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const review = await Review.findById(req.params.id);
 
   if (!review) {
@@ -115,7 +122,7 @@ exports.deleteReview = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Not authorized to update review`, 401));
   }
 
-  await review.remove();
+  await review.deleteOne();
 
   res.status(200).json({
     success: true,
