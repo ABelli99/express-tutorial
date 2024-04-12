@@ -1,21 +1,22 @@
-const path = require('path');
-const slugify = require("slugify");
-const ErrorResponse = require('../utils/errorResponse');
-const asyncHandler = require('../middleware/async');
-const geocoder = require('../utils/geocoder');
-const Bootcamp = require('../models/Bootcamp');
+import path from 'path';
+import slugify from "slugify";
+import { Request, Response, NextFunction } from 'express';
+import ErrorResponse from '../utils/errorResponse';
+import asyncHandler from '../middleware/async';
+import geocoder from '../utils/geocoder';
+import Bootcamp from '../models/Bootcamp';
 
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
 // @access    Public
-exports.getBootcamps = asyncHandler(async (req, res, next) => {
+export const getBootcamps = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   res.status(200).json(res.advancedResults);
 });
 
 // @desc      Get single bootcamp
 // @route     GET /api/v1/bootcamps/:id
 // @access    Public
-exports.getBootcamp = asyncHandler(async (req, res, next) => {
+export const getBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -30,7 +31,7 @@ exports.getBootcamp = asyncHandler(async (req, res, next) => {
 // @desc      Create new bootcamp
 // @route     POST /api/v1/bootcamps
 // @access    Private
-exports.createBootcamp = asyncHandler(async (req, res, next) => {
+export const createBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   // Add user to req,body
   req.body.user = req.user.id;
 
@@ -58,7 +59,7 @@ exports.createBootcamp = asyncHandler(async (req, res, next) => {
 // @desc      Update bootcamp
 // @route     PUT /api/v1/bootcamps/:id
 // @access    Private
-exports.updateBootcamp = asyncHandler(async (req, res, next) => {
+export const updateBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   let bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -93,7 +94,7 @@ exports.updateBootcamp = asyncHandler(async (req, res, next) => {
 // @desc      Delete bootcamp
 // @route     DELETE /api/v1/bootcamps/:id
 // @access    Private
-exports.deleteBootcamp = asyncHandler(async (req, res, next) => {
+export const deleteBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -112,7 +113,7 @@ exports.deleteBootcamp = asyncHandler(async (req, res, next) => {
     );
   }
 
-  await bootcamp.remove();
+  await bootcamp.deleteOne();
 
   res.status(200).json({ success: true, data: {} });
 });
@@ -120,7 +121,7 @@ exports.deleteBootcamp = asyncHandler(async (req, res, next) => {
 // @desc      Get bootcamps within a radius
 // @route     GET /api/v1/bootcamps/radius/:zipcode/:distance
 // @access    Private
-exports.getBootcampsInRadius = asyncHandler(async (req, res, next) => {
+export const getBootcampsInRadius = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const { zipcode, distance } = req.params;
 
   // Get lat/lng from geocoder
@@ -147,7 +148,7 @@ exports.getBootcampsInRadius = asyncHandler(async (req, res, next) => {
 // @desc      Upload photo for bootcamp
 // @route     PUT /api/v1/bootcamps/:id/photo
 // @access    Private
-exports.bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
+export const bootcampPhotoUpload = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -178,7 +179,11 @@ exports.bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
   }
 
   // Check filesize
-  if (file.size > process.env.MAX_FILE_UPLOAD) {
+  if (file.size > (process.env.MAX_FILE_UPLOAD ? 
+      process.env.MAX_FILE_UPLOAD : 
+      0
+    )
+  ) {
     return next(
       new ErrorResponse(
         `Please upload an image less than ${process.env.MAX_FILE_UPLOAD}`,
