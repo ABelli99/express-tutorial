@@ -1,11 +1,11 @@
-import { Document, Schema, Model } from 'mongoose';
+import mongoose, { Schema, Model } from 'mongoose';
 import slugify from 'slugify';
 import geocoder from '../utils/geocoder';
 
 import Course from './Course';
 import Review from './Review';
 
-interface Bootcamp extends Document {
+interface Bootcamp extends mongoose.Document {
   _id: Schema.Types.ObjectId
   name: string;
   slug: string;
@@ -188,6 +188,6 @@ BootcampSchema.virtual('courses', {
   justOne: false
 });
 
-const BootcampModel: Model<Bootcamp> = new Model('Bootcamp', BootcampSchema);
+const BootcampModel: Model<Bootcamp> = mongoose.model('Bootcamp', BootcampSchema);
 
 export default BootcampModel;

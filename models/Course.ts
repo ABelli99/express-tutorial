@@ -1,7 +1,7 @@
-import { Document, Model, Schema } from 'mongoose';
+import mongoose, { Model, Schema } from 'mongoose';
 
 import Bootcamp from './Bootcamp';
-interface Course extends Document {
+interface Course extends mongoose.Document {
   title: string;
   description: string;
   weeks: string;
@@ -102,5 +102,5 @@ CourseSchema.post<Course>('findOneAndUpdate', async function (doc: Course) {
   }
 });
 
-const Course: Model<Course> = new Model('Course', CourseSchema);
+const Course: Model<Course> = mongoose.model('Course', CourseSchema);
 export default Course;
