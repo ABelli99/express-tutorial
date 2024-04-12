@@ -1,21 +1,27 @@
-const ErrorResponse = require('../utils/errorResponse');
-const asyncHandler = require('../middleware/async');
-const User = require('../models/User');
+import { Request, Response, NextFunction } from 'express';
+import ErrorResponse from '../utils/errorResponse';
+import asyncHandler from '../middleware/async';
+import User from '../models/User';
+
+interface AdvancedResults {
+  success: boolean;
+  data: any;
+}
 
 // @desc      Get all users
 // @route     GET /api/v1/users
 // @access    Private/Admin
-exports.getUsers = asyncHandler(async (req, res, next) => {
+export const getUsers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   res.status(200).json(res.advancedResults);
 });
 
 // @desc      Get single user
 // @route     GET /api/v1/users/:id
 // @access    Private/Admin
-exports.getUser = asyncHandler(async (req, res, next) => {
+export const getUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const user = await User.findById(req.params.id);
 
-  if(!user){
+  if (!user) {
     return next(new ErrorResponse(`No user with the id of ${req.params.id}`, 404));
   }
 
@@ -28,7 +34,7 @@ exports.getUser = asyncHandler(async (req, res, next) => {
 // @desc      Create user
 // @route     POST /api/v1/users
 // @access    Private/Admin
-exports.createUser = asyncHandler(async (req, res, next) => {
+export const createUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const user = await User.create(req.body);
 
   res.status(201).json({
@@ -40,7 +46,7 @@ exports.createUser = asyncHandler(async (req, res, next) => {
 // @desc      Update user
 // @route     PUT /api/v1/users/:id
 // @access    Private/Admin
-exports.updateUser = asyncHandler(async (req, res, next) => {
+export const updateUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const user = await User.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -55,7 +61,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
 // @desc      Delete user
 // @route     DELETE /api/v1/users/:id
 // @access    Private/Admin
-exports.deleteUser = asyncHandler(async (req, res, next) => {
+export const deleteUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   await User.findByIdAndDelete(req.params.id);
 
   res.status(200).json({
