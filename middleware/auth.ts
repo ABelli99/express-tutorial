@@ -1,11 +1,13 @@
-const jwt = require('jsonwebtoken');
-const asyncHandler = require('./async');
-const ErrorResponse = require('../utils/errorResponse');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import asyncHandler from './async';
+import ErrorResponse from '../utils/errorResponse';
+import User from '../models/User';
+import { AdvRequest, AdvResponse } from '../utils/advanceResponse';
+import { NextFunction } from 'express';
 
 // Protect routes
-exports.protect = asyncHandler(async (req, res, next) => {
-  let token;
+export const protect = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+  let token: string = '';
 
   if (
     req.headers.authorization &&
@@ -26,9 +28,9 @@ exports.protect = asyncHandler(async (req, res, next) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
 
-    req.user = await User.findById(decoded.id);
+    req.user = await User.findById(decoded.id) as User;
 
     next();
   } catch (err) {
@@ -37,8 +39,8 @@ exports.protect = asyncHandler(async (req, res, next) => {
 });
 
 // Grant access to specific roles
-exports.authorize = (...roles) => {
-  return (req, res, next) => {
+export const authorize = (...roles: string[]) => {
+  return (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
     if (!roles.includes(req.user.role)) {
       return next(
         new ErrorResponse(
