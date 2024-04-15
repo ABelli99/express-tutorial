@@ -5,18 +5,30 @@ import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
 import geocoder from '../utils/geocoder';
 import Bootcamp from '../models/Bootcamp';
+import User from '../models/User';
+
+interface CustomRequest extends Request
+{
+    user: User;
+    files: any;
+}
+
+interface CustomResponse extends Response{
+  advancedResults: any;
+}
+
 
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
 // @access    Public
-export const getBootcamps = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getBootcamps = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   res.status(200).json(res.advancedResults);
 });
 
 // @desc      Get single bootcamp
 // @route     GET /api/v1/bootcamps/:id
 // @access    Public
-export const getBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getBootcamp = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   const bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -31,7 +43,7 @@ export const getBootcamp = asyncHandler(async (req: Request, res: Response, next
 // @desc      Create new bootcamp
 // @route     POST /api/v1/bootcamps
 // @access    Private
-export const createBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const createBootcamp = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   // Add user to req,body
   req.body.user = req.user.id;
 
@@ -59,7 +71,7 @@ export const createBootcamp = asyncHandler(async (req: Request, res: Response, n
 // @desc      Update bootcamp
 // @route     PUT /api/v1/bootcamps/:id
 // @access    Private
-export const updateBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const updateBootcamp = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   let bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -94,7 +106,7 @@ export const updateBootcamp = asyncHandler(async (req: Request, res: Response, n
 // @desc      Delete bootcamp
 // @route     DELETE /api/v1/bootcamps/:id
 // @access    Private
-export const deleteBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const deleteBootcamp = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   const bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -121,7 +133,7 @@ export const deleteBootcamp = asyncHandler(async (req: Request, res: Response, n
 // @desc      Get bootcamps within a radius
 // @route     GET /api/v1/bootcamps/radius/:zipcode/:distance
 // @access    Private
-export const getBootcampsInRadius = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getBootcampsInRadius = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   const { zipcode, distance } = req.params;
 
   // Get lat/lng from geocoder
@@ -132,7 +144,7 @@ export const getBootcampsInRadius = asyncHandler(async (req: Request, res: Respo
   // Calc radius using radians
   // Divide dist by radius of Earth
   // Earth Radius = 3,963 mi / 6,378 km
-  const radius = distance / 3963;
+  const radius = parseInt(distance) / 3963;
 
   const bootcamps = await Bootcamp.find({
     location: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }
@@ -148,7 +160,7 @@ export const getBootcampsInRadius = asyncHandler(async (req: Request, res: Respo
 // @desc      Upload photo for bootcamp
 // @route     PUT /api/v1/bootcamps/:id/photo
 // @access    Private
-export const bootcampPhotoUpload = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const bootcampPhotoUpload = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   const bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {

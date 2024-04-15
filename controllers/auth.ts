@@ -5,10 +5,15 @@ import asyncHandler from '../middleware/async';
 import sendEmail from '../utils/sendEmail';
 import User from '../models/User';
 
+interface CustomRequest extends Request
+{
+    user: User;
+}
+
 // @desc      Register user
 // @route     POST /api/v1/auth/register
 // @access    Public
-export const register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const register = asyncHandler(async (req: CustomRequest, res: Response, next: NextFunction) => {
   const { name, email, password, role } = req.body;
 
   // Create user
@@ -43,7 +48,7 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
 // @desc      Login user
 // @route     POST /api/v1/auth/login
 // @access    Public
-export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const login = asyncHandler(async (req: CustomRequest, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
 
   // Validate emil & password
@@ -71,7 +76,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
 // @desc      Log user out / clear cookie
 // @route     GET /api/v1/auth/logout
 // @access    Public
-export const logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const logout = asyncHandler(async (req: CustomRequest, res: Response, next: NextFunction) => {
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
@@ -86,7 +91,7 @@ export const logout = asyncHandler(async (req: Request, res: Response, next: Nex
 // @desc      Get current logged in user
 // @route     GET /api/v1/auth/me
 // @access    Private
-export const getMe = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getMe = asyncHandler(async (req: CustomRequest, res: Response, next: NextFunction) => {
   // user is already available in req due to the protect middleware
   const user = req.user;
 
@@ -99,7 +104,7 @@ export const getMe = asyncHandler(async (req: Request, res: Response, next: Next
 // @desc      Update user details
 // @route     PUT /api/v1/auth/updatedetails
 // @access    Private
-export const updateDetails = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const updateDetails = asyncHandler(async (req: CustomRequest, res: Response, next: NextFunction) => {
   const fieldsToUpdate = {
     name: req.body.name,
     email: req.body.email,
@@ -119,7 +124,7 @@ export const updateDetails = asyncHandler(async (req: Request, res: Response, ne
 // @desc      Update password
 // @route     PUT /api/v1/auth/updatepassword
 // @access    Private
-export const updatePassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const updatePassword = asyncHandler(async (req: CustomRequest, res: Response, next: NextFunction) => {
   const user = await User.findById(req.user.id).select('+password');
 
   // Check if user exists
@@ -141,7 +146,7 @@ export const updatePassword = asyncHandler(async (req: Request, res: Response, n
 // @desc      Forgot password
 // @route     POST /api/v1/auth/forgotpassword
 // @access    Public
-export const forgotPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const forgotPassword = asyncHandler(async (req: CustomRequest, res: Response, next: NextFunction) => {
   const user = await User.findOne({ email: req.body.email });
 
   if (!user) {
@@ -182,7 +187,7 @@ export const forgotPassword = asyncHandler(async (req: Request, res: Response, n
 // @desc      Reset password
 // @route     PUT /api/v1/auth/resetpassword/:resettoken
 // @access    Public
-export const resetPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const resetPassword = asyncHandler(async (req: CustomRequest, res: Response, next: NextFunction) => {
   // Get hashed token
   const resetPasswordToken = crypto
     .createHash('sha256')
@@ -212,7 +217,7 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response, ne
  * @route   GET /api/v1/auth/confirmemail
  * @access  Public
  */
-export const confirmEmail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const confirmEmail = asyncHandler(async (req: CustomRequest, res: Response, next: NextFunction) => {
   // grab token from email
   const { token } = req.query;
 
@@ -220,7 +225,7 @@ export const confirmEmail = asyncHandler(async (req: Request, res: Response, nex
     return next(new ErrorResponse('Invalid Token', 400));
   }
 
-  const splitToken = token.split('.')[0];
+  const splitToken = token.toString().split('.')[0];
   const confirmEmailToken = crypto
     .createHash('sha256')
     .update(splitToken)

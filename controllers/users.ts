@@ -3,22 +3,27 @@ import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
 import User from '../models/User';
 
-interface AdvancedResults {
-  success: boolean;
-  data: any;
+interface CustomRequest extends Request
+{
+    user: User;
+    files: any;
+}
+
+interface CustomResponse extends Response{
+  advancedResults: any;
 }
 
 // @desc      Get all users
 // @route     GET /api/v1/users
 // @access    Private/Admin
-export const getUsers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getUsers = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   res.status(200).json(res.advancedResults);
 });
 
 // @desc      Get single user
 // @route     GET /api/v1/users/:id
 // @access    Private/Admin
-export const getUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getUser = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   const user = await User.findById(req.params.id);
 
   if (!user) {
@@ -34,7 +39,7 @@ export const getUser = asyncHandler(async (req: Request, res: Response, next: Ne
 // @desc      Create user
 // @route     POST /api/v1/users
 // @access    Private/Admin
-export const createUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const createUser = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   const user = await User.create(req.body);
 
   res.status(201).json({
@@ -46,7 +51,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response, next:
 // @desc      Update user
 // @route     PUT /api/v1/users/:id
 // @access    Private/Admin
-export const updateUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const updateUser = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   const user = await User.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -61,7 +66,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response, next:
 // @desc      Delete user
 // @route     DELETE /api/v1/users/:id
 // @access    Private/Admin
-export const deleteUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const deleteUser = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   await User.findByIdAndDelete(req.params.id);
 
   res.status(200).json({

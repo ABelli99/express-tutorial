@@ -3,12 +3,24 @@ import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
 import Review from '../models/Review';
 import Bootcamp from '../models/Bootcamp';
+import User from '../models/User';
+
+interface CustomRequest extends Request
+{
+    user: User;
+    files: any;
+}
+
+interface CustomResponse extends Response{
+  advancedResults: any;
+}
+
 
 // @desc      Get reviews
 // @route     GET /api/v1/reviews
 // @route     GET /api/v1/bootcamps/:bootcampId/reviews
 // @access    Public
-export const getReviews = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getReviews = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   if (req.params.bootcampId) {
     const reviews = await Review.find({ bootcamp: req.params.bootcampId });
 
@@ -25,7 +37,7 @@ export const getReviews = asyncHandler(async (req: Request, res: Response, next:
 // @desc      Get single review
 // @route     GET /api/v1/reviews/:id
 // @access    Public
-export const getReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getReview = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   const review = await Review.findById(req.params.id).populate({
     path: 'bootcamp',
     select: 'name description'
@@ -46,7 +58,7 @@ export const getReview = asyncHandler(async (req: Request, res: Response, next: 
 // @desc      Add review
 // @route     POST /api/v1/bootcamps/:bootcampId/reviews
 // @access    Private
-export const addReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const addReview = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   req.body.bootcamp = req.params.bootcampId;
   req.body.user = req.user.id;
 
@@ -72,7 +84,7 @@ export const addReview = asyncHandler(async (req: Request, res: Response, next: 
 // @desc      Update review
 // @route     PUT /api/v1/reviews/:id
 // @access    Private
-export const updateReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const updateReview = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   let review = await Review.findById(req.params.id);
 
   if (!review) {
@@ -108,7 +120,7 @@ export const updateReview = asyncHandler(async (req: Request, res: Response, nex
 // @desc      Delete review
 // @route     DELETE /api/v1/reviews/:id
 // @access    Private
-export const deleteReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const deleteReview = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
   const review = await Review.findById(req.params.id);
 
   if (!review) {
