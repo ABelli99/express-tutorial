@@ -1,26 +1,16 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction } from 'express';
 import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
 import Course from '../models/Course';
 import Bootcamp from '../models/Bootcamp';
-import User from '../models/User';
-
-interface CustomRequest extends Request
-{
-    user: User;
-    files: any;
-}
-
-interface CustomResponse extends Response{
-  advancedResults: any;
-}
+import { AdvRequest, AdvResponse } from '../utils/advanceResponse';
 
 
 // @desc      Get courses
 // @route     GET /api/v1/courses
 // @route     GET /api/v1/bootcamps/:bootcampId/courses
 // @access    Public
-export const getCourses = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
+export const getCourses = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
   if (req.params.bootcampId) {
     const courses = await Course.find({ bootcamp: req.params.bootcampId });
 
@@ -37,7 +27,7 @@ export const getCourses = asyncHandler(async (req: CustomRequest, res: CustomRes
 // @desc      Get single course
 // @route     GET /api/v1/courses/:id
 // @access    Public
-export const getCourse = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
+export const getCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
   const course = await Course.findById(req.params.id).populate({
     path: 'bootcamp',
     select: 'name description'
@@ -58,7 +48,7 @@ export const getCourse = asyncHandler(async (req: CustomRequest, res: CustomResp
 // @desc      Add course
 // @route     POST /api/v1/bootcamps/:bootcampId/courses
 // @access    Private
-export const addCourse = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
+export const addCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
   req.body.bootcamp = req.params.bootcampId;
   req.body.user = req.user.id;
 
@@ -94,7 +84,7 @@ export const addCourse = asyncHandler(async (req: CustomRequest, res: CustomResp
 // @desc      Update course
 // @route     PUT /api/v1/courses/:id
 // @access    Private
-export const updateCourse = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
+export const updateCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
   let course = await Course.findById(req.params.id);
 
   if (!course) {
@@ -135,7 +125,7 @@ export const updateCourse = asyncHandler(async (req: CustomRequest, res: CustomR
 // @desc      Delete course
 // @route     DELETE /api/v1/courses/:id
 // @access    Private
-export const deleteCourse = asyncHandler(async (req: CustomRequest, res: CustomResponse, next: NextFunction) => {
+export const deleteCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
   const course = await Course.findById(req.params.id);
 
   if (!course) {
