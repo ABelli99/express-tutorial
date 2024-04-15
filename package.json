@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "NODE_ENV=production node server",
-    "dev": "nodemon server"
+    "dev": "nodemon server",
+    "tsc": "tsc"
   },
   "author": "ABelli",
   "license": "MIT",
@@ -35,6 +36,8 @@
   },
   "devDependencies": {
     "@types/node": "^20.12.6",
-    "nodemon": "^1.19.2"
+    "@types/node-geocoder": "^4.2.6",
+    "nodemon": "^1.19.2",
+    "typescript": "^5.4.5"
   }
 }
