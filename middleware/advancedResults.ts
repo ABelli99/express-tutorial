@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
-const advancedResults = (model: any, populate: any) => async (req: Request, res: Response, next: NextFunction) => {
+const advancedResults = (model: any, populate?: any) => async (req: Request, res: Response, next: NextFunction) => {
   let query: any;
 
   // Copy req.query
