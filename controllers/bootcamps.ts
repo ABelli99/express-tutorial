@@ -1,23 +1,22 @@
 import path from 'path';
 import slugify from "slugify";
-import { NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
 import geocoder from '../utils/geocoder';
 import Bootcamp from '../models/Bootcamp';
-import { AdvRequest, AdvResponse } from '../utils/advanceResponse';
 
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
 // @access    Public
-export const getBootcamps = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const getBootcamps = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   res.status(200).json(res.advancedResults);
 });
 
 // @desc      Get single bootcamp
 // @route     GET /api/v1/bootcamps/:id
 // @access    Public
-export const getBootcamp = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const getBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -32,18 +31,18 @@ export const getBootcamp = asyncHandler(async (req: AdvRequest, res: AdvResponse
 // @desc      Create new bootcamp
 // @route     POST /api/v1/bootcamps
 // @access    Private
-export const createBootcamp = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const createBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   // Add user to req,body
-  req.body.user = req.user.id;
+  req.body.user = req.user!.id;
 
   // Check for published bootcamp
-  const publishedBootcamp = await Bootcamp.findOne({ user: req.user.id });
+  const publishedBootcamp = await Bootcamp.findOne({ user: req.user!.id });
 
   // If the user is not an admin, they can only add one bootcamp
-  if (publishedBootcamp && req.user.role !== 'admin') {
+  if (publishedBootcamp && req.user!.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `The user with ID ${req.user.id} has already published a bootcamp`,
+        `The user with ID ${req.user!.id} has already published a bootcamp`,
         400
       )
     );
@@ -60,7 +59,7 @@ export const createBootcamp = asyncHandler(async (req: AdvRequest, res: AdvRespo
 // @desc      Update bootcamp
 // @route     PUT /api/v1/bootcamps/:id
 // @access    Private
-export const updateBootcamp = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const updateBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   let bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -70,10 +69,10 @@ export const updateBootcamp = asyncHandler(async (req: AdvRequest, res: AdvRespo
   }
 
   // Make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (bootcamp.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user.id} is not authorized to update this bootcamp`,
+        `User ${req.user!.id} is not authorized to update this bootcamp`,
         401
       )
     );
@@ -95,7 +94,7 @@ export const updateBootcamp = asyncHandler(async (req: AdvRequest, res: AdvRespo
 // @desc      Delete bootcamp
 // @route     DELETE /api/v1/bootcamps/:id
 // @access    Private
-export const deleteBootcamp = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const deleteBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -105,10 +104,10 @@ export const deleteBootcamp = asyncHandler(async (req: AdvRequest, res: AdvRespo
   }
 
   // Make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (bootcamp.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user.id} is not authorized to delete this bootcamp`,
+        `User ${req.user!.id} is not authorized to delete this bootcamp`,
         401
       )
     );
@@ -122,7 +121,7 @@ export const deleteBootcamp = asyncHandler(async (req: AdvRequest, res: AdvRespo
 // @desc      Get bootcamps within a radius
 // @route     GET /api/v1/bootcamps/radius/:zipcode/:distance
 // @access    Private
-export const getBootcampsInRadius = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const getBootcampsInRadius = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const { zipcode, distance } = req.params;
 
   // Get lat/lng from geocoder
@@ -149,7 +148,7 @@ export const getBootcampsInRadius = asyncHandler(async (req: AdvRequest, res: Ad
 // @desc      Upload photo for bootcamp
 // @route     PUT /api/v1/bootcamps/:id/photo
 // @access    Private
-export const bootcampPhotoUpload = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const bootcampPhotoUpload = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const bootcamp = await Bootcamp.findById(req.params.id);
 
   if (!bootcamp) {
@@ -159,10 +158,10 @@ export const bootcampPhotoUpload = asyncHandler(async (req: AdvRequest, res: Adv
   }
 
   // Make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (bootcamp.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user.id} is not authorized to update this bootcamp`,
+        `User ${req.user!.id} is not authorized to update this bootcamp`,
         401
       )
     );

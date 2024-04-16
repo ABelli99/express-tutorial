@@ -1,20 +1,19 @@
-import { NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
 import User from '../models/User';
-import { AdvRequest, AdvResponse } from '../utils/advanceResponse';
 
 // @desc      Get all users
 // @route     GET /api/v1/users
 // @access    Private/Admin
-export const getUsers = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const getUsers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   res.status(200).json(res.advancedResults);
 });
 
 // @desc      Get single user
 // @route     GET /api/v1/users/:id
 // @access    Private/Admin
-export const getUser = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const getUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const user = await User.findById(req.params.id);
 
   if (!user) {
@@ -30,7 +29,7 @@ export const getUser = asyncHandler(async (req: AdvRequest, res: AdvResponse, ne
 // @desc      Create user
 // @route     POST /api/v1/users
 // @access    Private/Admin
-export const createUser = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const createUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const user = await User.create(req.body);
 
   res.status(201).json({
@@ -42,7 +41,7 @@ export const createUser = asyncHandler(async (req: AdvRequest, res: AdvResponse,
 // @desc      Update user
 // @route     PUT /api/v1/users/:id
 // @access    Private/Admin
-export const updateUser = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const updateUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const user = await User.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -57,7 +56,7 @@ export const updateUser = asyncHandler(async (req: AdvRequest, res: AdvResponse,
 // @desc      Delete user
 // @route     DELETE /api/v1/users/:id
 // @access    Private/Admin
-export const deleteUser = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const deleteUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   await User.findByIdAndDelete(req.params.id);
 
   res.status(200).json({

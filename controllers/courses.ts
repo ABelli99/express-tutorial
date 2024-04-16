@@ -1,16 +1,14 @@
-import { NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
 import Course from '../models/Course';
 import Bootcamp from '../models/Bootcamp';
-import { AdvRequest, AdvResponse } from '../utils/advanceResponse';
-
 
 // @desc      Get courses
 // @route     GET /api/v1/courses
 // @route     GET /api/v1/bootcamps/:bootcampId/courses
 // @access    Public
-export const getCourses = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const getCourses = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   if (req.params.bootcampId) {
     const courses = await Course.find({ bootcamp: req.params.bootcampId });
 
@@ -27,7 +25,7 @@ export const getCourses = asyncHandler(async (req: AdvRequest, res: AdvResponse,
 // @desc      Get single course
 // @route     GET /api/v1/courses/:id
 // @access    Public
-export const getCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const getCourse = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const course = await Course.findById(req.params.id).populate({
     path: 'bootcamp',
     select: 'name description'
@@ -48,9 +46,9 @@ export const getCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, 
 // @desc      Add course
 // @route     POST /api/v1/bootcamps/:bootcampId/courses
 // @access    Private
-export const addCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const addCourse = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   req.body.bootcamp = req.params.bootcampId;
-  req.body.user = req.user.id;
+  req.body.user = req.user!.id;
 
   const bootcamp = await Bootcamp.findById(req.params.bootcampId);
 
@@ -64,10 +62,10 @@ export const addCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, 
   }
 
   // Make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (bootcamp.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user.id} is not authorized to add a course to bootcamp ${bootcamp._id}`,
+        `User ${req.user!.id} is not authorized to add a course to bootcamp ${bootcamp._id}`,
         401
       )
     );
@@ -84,7 +82,7 @@ export const addCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, 
 // @desc      Update course
 // @route     PUT /api/v1/courses/:id
 // @access    Private
-export const updateCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const updateCourse = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   let course = await Course.findById(req.params.id);
 
   if (!course) {
@@ -94,10 +92,10 @@ export const updateCourse = asyncHandler(async (req: AdvRequest, res: AdvRespons
   }
 
   // Make sure user is course owner
-  if (course.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (course.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user.id} is not authorized to update course ${course._id}`,
+        `User ${req.user!.id} is not authorized to update course ${course._id}`,
         401
       )
     );
@@ -125,7 +123,7 @@ export const updateCourse = asyncHandler(async (req: AdvRequest, res: AdvRespons
 // @desc      Delete course
 // @route     DELETE /api/v1/courses/:id
 // @access    Private
-export const deleteCourse = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const deleteCourse = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const course = await Course.findById(req.params.id);
 
   if (!course) {
@@ -135,10 +133,10 @@ export const deleteCourse = asyncHandler(async (req: AdvRequest, res: AdvRespons
   }
 
   // Make sure user is course owner
-  if (course.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (course.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user.id} is not authorized to delete course ${course._id}`,
+        `User ${req.user!.id} is not authorized to delete course ${course._id}`,
         401
       )
     );

@@ -1,15 +1,15 @@
-import { NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
 import Review from '../models/Review';
 import Bootcamp from '../models/Bootcamp';
-import { AdvRequest, AdvResponse } from '../utils/advanceResponse';
+
 
 // @desc      Get reviews
 // @route     GET /api/v1/reviews
 // @route     GET /api/v1/bootcamps/:bootcampId/reviews
 // @access    Public
-export const getReviews = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const getReviews = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   if (req.params.bootcampId) {
     const reviews = await Review.find({ bootcamp: req.params.bootcampId });
 
@@ -26,7 +26,7 @@ export const getReviews = asyncHandler(async (req: AdvRequest, res: AdvResponse,
 // @desc      Get single review
 // @route     GET /api/v1/reviews/:id
 // @access    Public
-export const getReview = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const getReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const review = await Review.findById(req.params.id).populate({
     path: 'bootcamp',
     select: 'name description'
@@ -47,9 +47,9 @@ export const getReview = asyncHandler(async (req: AdvRequest, res: AdvResponse, 
 // @desc      Add review
 // @route     POST /api/v1/bootcamps/:bootcampId/reviews
 // @access    Private
-export const addReview = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const addReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   req.body.bootcamp = req.params.bootcampId;
-  req.body.user = req.user.id;
+  req.body.user = req.user!.id;
 
   const bootcamp = await Bootcamp.findById(req.params.bootcampId);
 
@@ -73,7 +73,7 @@ export const addReview = asyncHandler(async (req: AdvRequest, res: AdvResponse, 
 // @desc      Update review
 // @route     PUT /api/v1/reviews/:id
 // @access    Private
-export const updateReview = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const updateReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   let review = await Review.findById(req.params.id);
 
   if (!review) {
@@ -83,7 +83,7 @@ export const updateReview = asyncHandler(async (req: AdvRequest, res: AdvRespons
   }
 
   // Make sure review belongs to user or user is admin
-  if (review.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (review.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
     return next(new ErrorResponse(`Not authorized to update review`, 401));
   }
 
@@ -109,7 +109,7 @@ export const updateReview = asyncHandler(async (req: AdvRequest, res: AdvRespons
 // @desc      Delete review
 // @route     DELETE /api/v1/reviews/:id
 // @access    Private
-export const deleteReview = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const deleteReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const review = await Review.findById(req.params.id);
 
   if (!review) {
@@ -119,7 +119,7 @@ export const deleteReview = asyncHandler(async (req: AdvRequest, res: AdvRespons
   }
 
   // Make sure review belongs to user or user is admin
-  if (review.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (review.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
     return next(new ErrorResponse(`Not authorized to update review`, 401));
   }
 
