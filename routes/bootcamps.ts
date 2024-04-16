@@ -1,5 +1,5 @@
-const express = require('express');
-const {
+import express, { Router } from 'express';
+import {
   getBootcamps,
   getBootcamp,
   createBootcamp,
@@ -7,18 +7,18 @@ const {
   deleteBootcamp,
   getBootcampsInRadius,
   bootcampPhotoUpload
-} = require('../controllers/bootcamps');
+} from '../controllers/bootcamps';
 
-const Bootcamp = require('../models/Bootcamp');
+import Bootcamp from '../models/Bootcamp';
 
 // Include other resource routers
-const courseRouter = require('./courses');
-const reviewRouter = require('./reviews');
+import courseRouter from './courses';
+import reviewRouter from './reviews';
 
-const router = express.Router();
+const router: Router = express.Router();
 
 const advancedResults = require('../middleware/advancedResults');
-const { protect, authorize } = require('../middleware/auth');
+import { protect, authorize } from '../middleware/auth';
 
 // Re-route into other resource routers
 router.use('/:bootcampId/courses', courseRouter);
@@ -41,4 +41,4 @@ router
   .put(protect, authorize('publisher', 'admin'), updateBootcamp)
   .delete(protect, authorize('publisher', 'admin'), deleteBootcamp);
 
-module.exports = router;
+export default router;
