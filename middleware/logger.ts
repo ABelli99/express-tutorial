@@ -1,10 +1,9 @@
 /**
  * @description middleware
  */
-import { NextFunction } from 'express';
-import { AdvRequest, AdvResponse } from '../utils/advanceResponse';
+import { Request, Response, NextFunction } from 'express';
 
-const logger = (req: AdvRequest, res: AdvResponse, next: NextFunction): void => {
+const logger = (req: Request, res: Response, next: NextFunction): void => {
     console.log('miao');
     next();
 };

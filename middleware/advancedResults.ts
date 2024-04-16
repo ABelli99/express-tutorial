@@ -1,7 +1,6 @@
-import { NextFunction } from 'express';
-import { AdvRequest, AdvResponse } from '../utils/advanceResponse';
+import { Request, Response, NextFunction } from 'express';
 
-const advancedResults = (model: any, populate: string) => async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+const advancedResults = (model: any, populate: any) => async (req: Request, res: Response, next: NextFunction) => {
   let query: any;
 
   // Copy req.query

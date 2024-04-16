@@ -2,11 +2,10 @@ import jwt from 'jsonwebtoken';
 import asyncHandler from './async';
 import ErrorResponse from '../utils/errorResponse';
 import User from '../models/User';
-import { AdvRequest, AdvResponse } from '../utils/advanceResponse';
-import { NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 // Protect routes
-export const protect = asyncHandler(async (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
+export const protect = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   let token: string = '';
 
   if (
@@ -40,11 +39,11 @@ export const protect = asyncHandler(async (req: AdvRequest, res: AdvResponse, ne
 
 // Grant access to specific roles
 export const authorize = (...roles: string[]) => {
-  return (req: AdvRequest, res: AdvResponse, next: NextFunction) => {
-    if (!roles.includes(req.user.role)) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!roles.includes(req.user!.role)) {
       return next(
         new ErrorResponse(
-          `User role ${req.user.role} is not authorized to access this route`,
+          `User role ${req.user!.role} is not authorized to access this route`,
           403
         )
       );
