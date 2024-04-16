@@ -1,18 +1,18 @@
-const express = require('express');
-const {
+import express, { Router } from 'express';
+import {
   getCourses,
   getCourse,
   addCourse,
   updateCourse,
   deleteCourse
-} = require('../controllers/courses');
+} from '../controllers/courses';
 
-const Course = require('../models/Course');
+import Course from '../models/Course';
 
-const router = express.Router({ mergeParams: true });
+const router: Router = express.Router({ mergeParams: true });
 
-const advancedResults = require('../middleware/advancedResults');
-const { protect, authorize } = require('../middleware/auth');
+import advancedResults from '../middleware/advancedResults';
+import { protect, authorize } from '../middleware/auth';
 
 router
   .route('/')
@@ -31,4 +31,4 @@ router
   .put(protect, authorize('publisher', 'admin'), updateCourse)
   .delete(protect, authorize('publisher', 'admin'), deleteCourse);
 
-module.exports = router;
+export default router;
