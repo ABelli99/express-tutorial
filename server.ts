@@ -7,7 +7,7 @@ import fileupload from 'express-fileupload';
 import cookieParser from 'cookie-parser';
 import mongoSanitize from 'express-mongo-sanitize';
 import helmet from 'helmet';
-import xss from 'xss-clean';
+//import xss from 'xss-clean'; deprecated & dropped by author
 import rateLimit from 'express-rate-limit';
 import hpp from 'hpp';
 import cors from 'cors';
@@ -40,7 +40,7 @@ app.use(mongoSanitize());
 
 app.use(helmet());
 
-app.use(xss());
+//app.use(xss());
 
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000,
