@@ -1,7 +1,7 @@
 import mongoose, { Model, Schema } from 'mongoose';
 
 import Bootcamp from './Bootcamp';
-interface Course extends mongoose.Document {
+export interface Course extends mongoose.Document {
   title: string;
   description: string;
   weeks: string;

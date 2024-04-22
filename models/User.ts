@@ -4,7 +4,11 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import randomize from 'randomatic';
 
-interface User extends mongoose.Document {
+/**
+ * Interface for User, 
+ * extends mongoose.Document
+ */
+export interface User extends mongoose.Document {
   name: string;
   email: string;
   role: string;
@@ -123,5 +127,10 @@ UserSchema.methods.generateEmailConfirmToken = function (): string {
   return confirmTokenCombined;
 };
 
-const User: Model<User> = mongoose.model('User', UserSchema);
-export default User;
+/**
+ * Model of User, 
+ * has custom crypt/decrypt functions
+ * has default repository functions
+ */
+const UserModel: Model<User> = mongoose.model('User', UserSchema);
+export default UserModel;

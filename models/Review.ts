@@ -2,7 +2,7 @@ import mongoose, { Model, Schema } from 'mongoose';
 
 import Bootcamp from './Bootcamp';
 
-interface Review extends mongoose.Document {
+export interface Review extends mongoose.Document {
   title: string;
   text: string;
   rating: number;
@@ -87,6 +87,6 @@ ReviewSchema.post<Review>('deleteOne', async function() {
   await this.getAverageRating(this.bootcamp);
 });
 
-const ReviewModel: Model<Review> = mongoose.model('Review', ReviewSchema);
+const Review: Model<Review> = mongoose.model('Review', ReviewSchema);
 
-export default ReviewModel;
+export default Review;

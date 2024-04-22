@@ -5,7 +5,7 @@ import geocoder from '../utils/geocoder';
 import Course from './Course';
 import Review from './Review';
 
-interface Bootcamp extends mongoose.Document {
+export interface Bootcamp extends mongoose.Document {
   _id: Schema.Types.ObjectId
   name: string;
   slug: string;
