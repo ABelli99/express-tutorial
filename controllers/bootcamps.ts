@@ -4,20 +4,48 @@ import { Request, Response, NextFunction } from 'express';
 import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
 import geocoder from '../utils/geocoder';
-import Bootcamp from '../models/Bootcamp';
+import BootcampModel, { Bootcamp } from '../models/Bootcamp';
+import { UploadedFile } from 'express-fileupload';
+import { BootcampService, QueryOptions } from '../services/Bootcamps';
+import { getUserFromRequest } from '../services/Auths';
+import { BootcampDTO } from '../DTO/BootcampDTO';
 
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
 // @access    Public
 export const getBootcamps = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  res.status(200).json(res.advancedResults);
+  /**
+   * Body:
+   * {
+   *  pageSize: 10,
+   *  pageNumber: 2
+   * }
+   */
+
+  /**
+   * validation >>> call to service (params) => results: <T> >>> print results
+   */
+  const {pageSize, pageNumber} = req.body;
+
+  let query = req.body.query;
+  const queryOptions: QueryOptions = {populate: "course", pageSize: pageSize, pageNumber: pageNumber};
+
+
+  const service = new BootcampService();
+
+  const result: Bootcamp[] = await service.find(query, queryOptions);
+  if (!result) {
+    return res.status(404).send("No Bootcamps founded!");
+  }
+
+  res.status(200).send(result);
 });
 
 // @desc      Get single bootcamp
 // @route     GET /api/v1/bootcamps/:id
 // @access    Public
 export const getBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const bootcamp = await Bootcamp.findById(req.params.id);
+  const bootcamp = await BootcampModel.findById(req.params.id);
 
   if (!bootcamp) {
     return next(
@@ -32,23 +60,25 @@ export const getBootcamp = asyncHandler(async (req: Request, res: Response, next
 // @route     POST /api/v1/bootcamps
 // @access    Private
 export const createBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+
+  let verifiedUser = await getUserFromRequest(req, next);
   // Add user to req,body
-  req.body.user = req.user!.id;
+  req.body.user = verifiedUser.id;
 
   // Check for published bootcamp
-  const publishedBootcamp = await Bootcamp.findOne({ user: req.user!.id });
+  const publishedBootcamp = await BootcampModel.findOne({ user: verifiedUser.id });
 
   // If the user is not an admin, they can only add one bootcamp
-  if (publishedBootcamp && req.user!.role !== 'admin') {
+  if (publishedBootcamp && verifiedUser.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `The user with ID ${req.user!.id} has already published a bootcamp`,
+        `The user with ID ${verifiedUser.id} has already published a bootcamp`,
         400
       )
     );
   }
 
-  const bootcamp = await Bootcamp.create(req.body);
+  const bootcamp = await BootcampModel.create(req.body as BootcampDTO);
 
   res.status(201).json({
     success: true,
@@ -60,7 +90,9 @@ export const createBootcamp = asyncHandler(async (req: Request, res: Response, n
 // @route     PUT /api/v1/bootcamps/:id
 // @access    Private
 export const updateBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  let bootcamp = await Bootcamp.findById(req.params.id);
+
+  let verifiedUser = await getUserFromRequest(req, next);
+  let bootcamp = await BootcampModel.findById(req.params.id);
 
   if (!bootcamp) {
     return next(
@@ -69,10 +101,10 @@ export const updateBootcamp = asyncHandler(async (req: Request, res: Response, n
   }
 
   // Make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
+  if (bootcamp.user.toString() !== verifiedUser.id && verifiedUser.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user!.id} is not authorized to update this bootcamp`,
+        `User ${verifiedUser.id} is not authorized to update this bootcamp`,
         401
       )
     );
@@ -83,7 +115,7 @@ export const updateBootcamp = asyncHandler(async (req: Request, res: Response, n
     req.body.slug = slugify(req.body.name, { lower: true });
   }
 
-  bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id, req.body, {
+  bootcamp = await BootcampModel.findByIdAndUpdate(req.params.id, req.body as BootcampDTO, {
     new: true,
     runValidators: true
   });
@@ -95,7 +127,9 @@ export const updateBootcamp = asyncHandler(async (req: Request, res: Response, n
 // @route     DELETE /api/v1/bootcamps/:id
 // @access    Private
 export const deleteBootcamp = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const bootcamp = await Bootcamp.findById(req.params.id);
+  
+  let verifiedUser = await getUserFromRequest(req, next);
+  const bootcamp = await BootcampModel.findById(req.params.id);
 
   if (!bootcamp) {
     return next(
@@ -104,10 +138,10 @@ export const deleteBootcamp = asyncHandler(async (req: Request, res: Response, n
   }
 
   // Make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
+  if (bootcamp.user.toString() !== verifiedUser.id && verifiedUser.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user!.id} is not authorized to delete this bootcamp`,
+        `User ${verifiedUser.id} is not authorized to delete this bootcamp`,
         401
       )
     );
@@ -122,6 +156,7 @@ export const deleteBootcamp = asyncHandler(async (req: Request, res: Response, n
 // @route     GET /api/v1/bootcamps/radius/:zipcode/:distance
 // @access    Private
 export const getBootcampsInRadius = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+
   const { zipcode, distance } = req.params;
 
   // Get lat/lng from geocoder
@@ -134,7 +169,7 @@ export const getBootcampsInRadius = asyncHandler(async (req: Request, res: Respo
   // Earth Radius = 3,963 mi / 6,378 km
   const radius = parseInt(distance) / 3963;
 
-  const bootcamps = await Bootcamp.find({
+  const bootcamps = await BootcampModel.find({
     location: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }
   });
 
@@ -149,7 +184,9 @@ export const getBootcampsInRadius = asyncHandler(async (req: Request, res: Respo
 // @route     PUT /api/v1/bootcamps/:id/photo
 // @access    Private
 export const bootcampPhotoUpload = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const bootcamp = await Bootcamp.findById(req.params.id);
+
+  let verifiedUser = await getUserFromRequest(req, next);
+  const bootcamp = await BootcampModel.findById(req.params.id);
 
   if (!bootcamp) {
     return next(
@@ -158,10 +195,10 @@ export const bootcampPhotoUpload = asyncHandler(async (req: Request, res: Respon
   }
 
   // Make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
+  if (bootcamp.user.toString() !== verifiedUser.id && verifiedUser.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user!.id} is not authorized to update this bootcamp`,
+        `User ${verifiedUser.id} is not authorized to update this bootcamp`,
         401
       )
     );
@@ -171,7 +208,8 @@ export const bootcampPhotoUpload = asyncHandler(async (req: Request, res: Respon
     return next(new ErrorResponse(`Please upload a file`, 400));
   }
 
-  const file = req.files.file;
+  
+  const file: UploadedFile = req.files.file as UploadedFile;
 
   // Make sure the image is a photo
   if (!file.mimetype.startsWith('image')) {
@@ -180,7 +218,7 @@ export const bootcampPhotoUpload = asyncHandler(async (req: Request, res: Respon
 
   // Check filesize
   if (file.size > (process.env.MAX_FILE_UPLOAD ? 
-      process.env.MAX_FILE_UPLOAD : 
+      +process.env.MAX_FILE_UPLOAD : 
       0
     )
   ) {
@@ -201,7 +239,7 @@ export const bootcampPhotoUpload = asyncHandler(async (req: Request, res: Respon
       return next(new ErrorResponse(`Problem with file upload`, 500));
     }
 
-    await Bootcamp.findByIdAndUpdate(req.params.id, { photo: file.name });
+    await BootcampModel.findByIdAndUpdate(req.params.id, { photo: file.name });
 
     res.status(200).json({
       success: true,

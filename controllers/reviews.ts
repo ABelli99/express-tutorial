@@ -1,8 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
-import Review from '../models/Review';
+import ReviewModel, { Review } from '../models/Review';
 import Bootcamp from '../models/Bootcamp';
+import { ReviewService, QueryOptions } from '../services/Reviews';
+import { getUserFromRequest } from '../services/Auths';
+import { ReviewDTO } from '../DTO/ReviewDTO';
 
 
 // @desc      Get reviews
@@ -10,8 +13,9 @@ import Bootcamp from '../models/Bootcamp';
 // @route     GET /api/v1/bootcamps/:bootcampId/reviews
 // @access    Public
 export const getReviews = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  //all reviews from single bootcamp
   if (req.params.bootcampId) {
-    const reviews = await Review.find({ bootcamp: req.params.bootcampId });
+    const reviews = await ReviewModel.find({ bootcamp: req.params.bootcampId });
 
     return res.status(200).json({
       success: true,
@@ -19,7 +23,21 @@ export const getReviews = asyncHandler(async (req: Request, res: Response, next:
       data: reviews
     });
   } else {
-    res.status(200).json(res.advancedResults);
+    //all reviews from all bootcamps
+    const {pageSize, pageNumber} = req.body;
+
+    let query = req.body.query;
+    const queryOptions: QueryOptions = {populate: "bootcamp", pageSize: pageSize, pageNumber: pageNumber};
+
+
+    const service = new ReviewService();
+
+    const result: Review[] = await service.find(query, queryOptions);
+    if (!result) {
+      return res.status(404).send("No Reviews founded!");
+    }
+
+    res.status(200).send(result);
   }
 });
 
@@ -27,7 +45,7 @@ export const getReviews = asyncHandler(async (req: Request, res: Response, next:
 // @route     GET /api/v1/reviews/:id
 // @access    Public
 export const getReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const review = await Review.findById(req.params.id).populate({
+  const review = await ReviewModel.findById(req.params.id).populate({
     path: 'bootcamp',
     select: 'name description'
   });
@@ -48,8 +66,11 @@ export const getReview = asyncHandler(async (req: Request, res: Response, next: 
 // @route     POST /api/v1/bootcamps/:bootcampId/reviews
 // @access    Private
 export const addReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+
+  let verifiedUser = await getUserFromRequest(req, next);
+
   req.body.bootcamp = req.params.bootcampId;
-  req.body.user = req.user!.id;
+  req.body.user = verifiedUser.id;
 
   const bootcamp = await Bootcamp.findById(req.params.bootcampId);
 
@@ -62,7 +83,7 @@ export const addReview = asyncHandler(async (req: Request, res: Response, next: 
     );
   }
 
-  const review = await Review.create(req.body);
+  const review = await ReviewModel.create(req.body as ReviewDTO);
 
   res.status(201).json({
     success: true,
@@ -74,7 +95,9 @@ export const addReview = asyncHandler(async (req: Request, res: Response, next: 
 // @route     PUT /api/v1/reviews/:id
 // @access    Private
 export const updateReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  let review = await Review.findById(req.params.id);
+  
+  let verifiedUser = await getUserFromRequest(req, next);
+  let review = await ReviewModel.findById(req.params.id);
 
   if (!review) {
     return next(
@@ -83,11 +106,11 @@ export const updateReview = asyncHandler(async (req: Request, res: Response, nex
   }
 
   // Make sure review belongs to user or user is admin
-  if (review.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
+  if (review.user.toString() !== verifiedUser.id && verifiedUser.role !== 'admin') {
     return next(new ErrorResponse(`Not authorized to update review`, 401));
   }
 
-  review = await Review.findByIdAndUpdate(req.params.id, req.body, {
+  review = await ReviewModel.findByIdAndUpdate(req.params.id, req.body as ReviewDTO, {
     new: true,
     runValidators: true
   });
@@ -110,7 +133,9 @@ export const updateReview = asyncHandler(async (req: Request, res: Response, nex
 // @route     DELETE /api/v1/reviews/:id
 // @access    Private
 export const deleteReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const review = await Review.findById(req.params.id);
+  
+  let verifiedUser = await getUserFromRequest(req, next);
+  const review = await ReviewModel.findById(req.params.id);
 
   if (!review) {
     return next(
@@ -119,7 +144,7 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response, nex
   }
 
   // Make sure review belongs to user or user is admin
-  if (review.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
+  if (review.user.toString() !== verifiedUser.id && verifiedUser.role !== 'admin') {
     return next(new ErrorResponse(`Not authorized to update review`, 401));
   }
 

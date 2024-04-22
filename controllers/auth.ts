@@ -3,7 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
 import sendEmail from '../utils/sendEmail';
-import User from '../models/User';
+import UserModel from '../models/User';
+import { getUserFromRequest } from '../services/Auths';
 
 // @desc      Register user
 // @route     POST /api/v1/auth/register
@@ -12,7 +13,7 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
   const { name, email, password, role } = req.body;
 
   // Create user
-  const user = await User.create({
+  const user = await UserModel.create({
     name,
     email,
     password,
@@ -52,7 +53,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
   }
 
   // Check for user
-  const user = await User.findOne({ email }).select('+password');
+  const user = await UserModel.findOne({ email }).select('+password');
 
   if (!user) {
     return next(new ErrorResponse('Invalid credentials', 401));
@@ -87,8 +88,14 @@ export const logout = asyncHandler(async (req: Request, res: Response, next: Nex
 // @route     GET /api/v1/auth/me
 // @access    Private
 export const getMe = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+
+  let verifiedUser = await getUserFromRequest(req, next);
+
+  if(!verifiedUser) 
+    next(new ErrorResponse('something went wrong', 500));
+
   // user is already available in req due to the protect middleware
-  const user = req.user;
+  const user = verifiedUser!;
 
   res.status(200).json({
     success: true,
@@ -100,12 +107,18 @@ export const getMe = asyncHandler(async (req: Request, res: Response, next: Next
 // @route     PUT /api/v1/auth/updatedetails
 // @access    Private
 export const updateDetails = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+
+ let verifiedUser = await getUserFromRequest(req, next);
+
+  if(!verifiedUser) 
+    next(new ErrorResponse('something went wrong', 500));
+
   const fieldsToUpdate = {
-    name: req.body.name,
-    email: req.body.email,
+    name: verifiedUser!.name,
+    email: verifiedUser!.email,
   };
 
-  const user = await User.findByIdAndUpdate(req.user!.id, fieldsToUpdate, {
+  const user = await UserModel.findByIdAndUpdate(verifiedUser!.id, fieldsToUpdate, {
     new: true,
     runValidators: true,
   });
@@ -120,7 +133,13 @@ export const updateDetails = asyncHandler(async (req: Request, res: Response, ne
 // @route     PUT /api/v1/auth/updatepassword
 // @access    Private
 export const updatePassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const user = await User.findById(req.user!.id).select('+password');
+
+ let verifiedUser = await getUserFromRequest(req, next);
+
+  if(!verifiedUser) 
+    next(new ErrorResponse('something went wrong', 500));
+
+  const user = await UserModel.findById(verifiedUser!.id).select('+password');
 
   // Check if user exists
   if(!user){
@@ -142,7 +161,7 @@ export const updatePassword = asyncHandler(async (req: Request, res: Response, n
 // @route     POST /api/v1/auth/forgotpassword
 // @access    Public
 export const forgotPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const user = await User.findOne({ email: req.body.email });
+  const user = await UserModel.findOne({ email: req.body.email });
 
   if (!user) {
     return next(new ErrorResponse('There is no user with that email', 404));
@@ -189,7 +208,7 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response, ne
     .update(req.params.resettoken)
     .digest('hex');
 
-  const user = await User.findOne({
+  const user = await UserModel.findOne({
     resetPasswordToken,
     resetPasswordExpire: { $gt: Date.now() },
   });
@@ -227,7 +246,7 @@ export const confirmEmail = asyncHandler(async (req: Request, res: Response, nex
     .digest('hex');
 
   // get user by token
-  const user = await User.findOne({
+  const user = await UserModel.findOne({
     confirmEmailToken,
     isEmailConfirmed: false,
   });

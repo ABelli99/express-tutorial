@@ -1,24 +1,42 @@
 import { Request, Response, NextFunction } from 'express';
 import ErrorResponse from '../utils/errorResponse';
 import asyncHandler from '../middleware/async';
-import Course from '../models/Course';
+import CourseModel, { Course } from '../models/Course';
 import Bootcamp from '../models/Bootcamp';
-
+import { CourseService, QueryOptions } from '../services/Courses';
+import { getUserFromRequest } from '../services/Auths';
+import { CourseDTO } from '../DTO/CourseDTO';
 // @desc      Get courses
 // @route     GET /api/v1/courses
 // @route     GET /api/v1/bootcamps/:bootcampId/courses
 // @access    Public
 export const getCourses = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+
+  //all courses from single bootcamp
   if (req.params.bootcampId) {
-    const courses = await Course.find({ bootcamp: req.params.bootcampId });
+    const courses = await CourseModel.find({ bootcamp: req.params.bootcampId });
 
     return res.status(200).json({
       success: true,
       count: courses.length,
       data: courses
     });
-  } else {
-    res.status(200).json(res.advancedResults);
+  }else {
+    //all course from all bootcamps
+    const {pageSize, pageNumber} = req.body;
+
+    let query = req.body.query;
+    const queryOptions: QueryOptions = {populate: "bootcamp", pageSize: pageSize, pageNumber: pageNumber};
+
+
+    const service = new CourseService();
+
+    const result: Course[] = await service.find(query, queryOptions);
+    if (!result) {
+      return res.status(404).send("No Courses founded!");
+    }
+
+    res.status(200).send(result);
   }
 });
 
@@ -26,7 +44,7 @@ export const getCourses = asyncHandler(async (req: Request, res: Response, next:
 // @route     GET /api/v1/courses/:id
 // @access    Public
 export const getCourse = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const course = await Course.findById(req.params.id).populate({
+  const course = await CourseModel.findById(req.params.id).populate({
     path: 'bootcamp',
     select: 'name description'
   });
@@ -47,8 +65,11 @@ export const getCourse = asyncHandler(async (req: Request, res: Response, next: 
 // @route     POST /api/v1/bootcamps/:bootcampId/courses
 // @access    Private
 export const addCourse = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+
+  let verifiedUser = await getUserFromRequest(req, next);
+
   req.body.bootcamp = req.params.bootcampId;
-  req.body.user = req.user!.id;
+  req.body.user = verifiedUser.id;
 
   const bootcamp = await Bootcamp.findById(req.params.bootcampId);
 
@@ -62,16 +83,16 @@ export const addCourse = asyncHandler(async (req: Request, res: Response, next: 
   }
 
   // Make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
+  if (bootcamp.user.toString() !== verifiedUser.id && verifiedUser.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user!.id} is not authorized to add a course to bootcamp ${bootcamp._id}`,
+        `User ${verifiedUser.id} is not authorized to add a course to bootcamp ${bootcamp._id}`,
         401
       )
     );
   }
 
-  const course = await Course.create(req.body);
+  const course = await CourseModel.create(req.body as CourseDTO);
 
   res.status(200).json({
     success: true,
@@ -83,7 +104,9 @@ export const addCourse = asyncHandler(async (req: Request, res: Response, next: 
 // @route     PUT /api/v1/courses/:id
 // @access    Private
 export const updateCourse = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  let course = await Course.findById(req.params.id);
+
+  let verifiedUser = await getUserFromRequest(req, next);
+  let course = await CourseModel.findById(req.params.id);
 
   if (!course) {
     return next(
@@ -92,16 +115,16 @@ export const updateCourse = asyncHandler(async (req: Request, res: Response, nex
   }
 
   // Make sure user is course owner
-  if (course.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
+  if (course.user.toString() !== verifiedUser.id && verifiedUser.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user!.id} is not authorized to update course ${course._id}`,
+        `User ${verifiedUser.id} is not authorized to update course ${course._id}`,
         401
       )
     );
   }
 
-  course = await Course.findByIdAndUpdate(req.params.id, req.body, {
+  course = await CourseModel.findByIdAndUpdate(req.params.id, req.body as CourseDTO, {
     new: true,
     runValidators: true
   });
@@ -124,7 +147,9 @@ export const updateCourse = asyncHandler(async (req: Request, res: Response, nex
 // @route     DELETE /api/v1/courses/:id
 // @access    Private
 export const deleteCourse = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const course = await Course.findById(req.params.id);
+  
+  let verifiedUser = await getUserFromRequest(req, next);
+  const course = await CourseModel.findById(req.params.id);
 
   if (!course) {
     return next(
@@ -133,10 +158,10 @@ export const deleteCourse = asyncHandler(async (req: Request, res: Response, nex
   }
 
   // Make sure user is course owner
-  if (course.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
+  if (course.user.toString() !== verifiedUser.id && verifiedUser.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.user!.id} is not authorized to delete course ${course._id}`,
+        `User ${verifiedUser.id} is not authorized to delete course ${course._id}`,
         401
       )
     );
