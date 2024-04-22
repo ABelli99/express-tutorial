@@ -64,10 +64,12 @@ app.use(errorHandler);
 
 const PORT: number = parseInt(process.env.PORT || "5000", 10);
 
+express.request.files
+
 const server = app.listen(
   PORT,
   () => console.log(
-    `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
+    `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
   )
 );
 
