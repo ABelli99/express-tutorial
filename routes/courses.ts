@@ -16,19 +16,13 @@ import { protect, authorize } from '../middleware/auth';
 
 router
   .route('/')
-  .get(
-    advancedResults(Course, {
-      path: 'bootcamp',
-      select: 'name description'
-    }),
-    getCourses
-  )
-  .post(protect, authorize('publisher', 'admin'), addCourse);
+  .get(getCourses)
+  .post(addCourse);
 
 router
   .route('/:id')
   .get(getCourse)
-  .put(protect, authorize('publisher', 'admin'), updateCourse)
-  .delete(protect, authorize('publisher', 'admin'), deleteCourse);
+  .put(updateCourse)
+  .delete(deleteCourse);
 
 export default router;

@@ -14,12 +14,9 @@ import advancedResults from '../middleware/advancedResults';
 
 const router: Router = express.Router({ mergeParams: true });
 
-router.use(protect);
-router.use(authorize('admin'));
-
 router
   .route('/')
-  .get(advancedResults(User), getUsers)
+  .get(getUsers)
   .post(createUser);
 
 router
