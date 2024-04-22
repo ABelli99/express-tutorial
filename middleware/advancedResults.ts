@@ -1,10 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
+import Bootcamp from '../models/Bootcamp';
+import User from '../models/User';
+import Course from '../models/Course';
+import Review from '../models/Review';
+import { Model } from 'mongoose';
 
+//typeof Bootcamp | typeof Course | typeof Review | typeof User
 const advancedResults = (model: any, populate?: any) => async (req: Request, res: Response, next: NextFunction) => {
   let query: any;
 
   // Copy req.query
-  const reqQuery: any = { ...req.query };
+  const reqQuery: typeof req.query = { ...req.query };
 
   // Fields to exclude
   const removeFields: string[] = ['select', 'sort', 'page', 'limit'];
@@ -68,12 +74,12 @@ const advancedResults = (model: any, populate?: any) => async (req: Request, res
     };
   }
 
-  res.advancedResults = {
+  /*res.advancedResults = {
     success: true,
     count: results.length,
     pagination,
     data: results
-  };
+  };*/
 
   next();
 };
