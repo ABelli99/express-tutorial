@@ -17,7 +17,7 @@ import reviewRouter from './reviews';
 
 const router: Router = express.Router();
 
-const advancedResults = require('../middleware/advancedResults');
+import advancedResults from '../middleware/advancedResults';
 import { protect, authorize } from '../middleware/auth';
 
 // Re-route into other resource routers
