@@ -25,10 +25,10 @@ export const getBootcamps = asyncHandler(async (req: Request, res: Response, nex
   /**
    * validation >>> call to service (params) => results: <T> >>> print results
    */
-  const {pageSize, pageNumber} = req.body;
+  const {pageSize, pageNumber, sort} = req.body;
 
   let query = req.body.query;
-  const queryOptions: QueryOptions = {populate: "course", pageSize: pageSize, pageNumber: pageNumber};
+  const queryOptions: QueryOptions = {populate: "course", pageSize: pageSize, pageNumber: pageNumber, sort: sort};
 
 
   const service = new BootcampService();
@@ -38,7 +38,15 @@ export const getBootcamps = asyncHandler(async (req: Request, res: Response, nex
     return res.status(404).send("No Bootcamps founded!");
   }
 
-  res.status(200).send(result);
+
+  let body:any = result; //JSON.parse (?)
+
+  body.push("pageSize", pageSize)
+  body.push("pageNumber", pageNumber);
+  body.push("maxItems", await service.totalEntries(query, queryOptions));
+
+
+  res.status(200).send(body);
 });
 
 // @desc      Get single bootcamp

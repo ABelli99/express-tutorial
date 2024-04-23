@@ -23,10 +23,10 @@ export const getCourses = asyncHandler(async (req: Request, res: Response, next:
     });
   }else {
     //all course from all bootcamps
-    const {pageSize, pageNumber} = req.body;
+    const {pageSize, pageNumber, sort} = req.body;
 
     let query = req.body.query;
-    const queryOptions: QueryOptions = {populate: "bootcamp", pageSize: pageSize, pageNumber: pageNumber};
+    const queryOptions: QueryOptions = {populate: "bootcamp", pageSize: pageSize, pageNumber: pageNumber, sort: sort};
 
 
     const service = new CourseService();
@@ -36,7 +36,13 @@ export const getCourses = asyncHandler(async (req: Request, res: Response, next:
       return res.status(404).send("No Courses founded!");
     }
 
-    res.status(200).send(result);
+    let body:any = result;
+
+    body.push("pageSize", pageSize)
+    body.push("pageNumber", pageNumber);
+    body.push("maxItems", await service.totalEntries(query, queryOptions));
+  
+    res.status(200).send(body);
   }
 });
 

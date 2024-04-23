@@ -1,9 +1,11 @@
 import BootcampModel, {Bootcamp} from "../models/Bootcamp";
+import { getSortQuery } from "../utils/sort";
 
 export interface QueryOptions {
-    populate?: string
     pageSize: number
     pageNumber: number
+    sort?: JSON
+    populate?: string
 }
 
 export class BootcampService {
@@ -23,6 +25,20 @@ export class BootcampService {
             result.populate(queryOptions.populate);
         }
 
+        if(queryOptions.sort){  
+            result.sort(getSortQuery(queryOptions.sort));
+        } else {
+            result.sort('-createdAt');
+        }
+
+
+        return await result.exec();
+    }
+
+    
+    public async totalEntries(query: object, queryOptions: QueryOptions): Promise<number>{
+        const result = this.bootcamps
+        .countDocuments()
         return await result.exec();
     }
 }

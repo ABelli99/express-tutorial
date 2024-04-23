@@ -10,11 +10,10 @@ import { UserDTO } from '../DTO/UserDTO';
 // @route     GET /api/v1/users
 // @access    Private/Admin
 export const getUsers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const {pageSize, pageNumber} = req.body;
+  const {pageSize, pageNumber, sort} = req.body;
 
   let query = req.body.query;
-  const queryOptions: QueryOptions = {pageSize: pageSize, pageNumber: pageNumber};
-
+  const queryOptions: QueryOptions = {pageSize: pageSize, pageNumber: pageNumber, sort: sort};
 
   const service = new UserService();
 
@@ -23,7 +22,18 @@ export const getUsers = asyncHandler(async (req: Request, res: Response, next: N
     return res.status(404).send("No Users founded!");
   }
 
-  res.status(200).send(result);
+  
+
+  let body:any = result;
+
+  body.push("pageSize", pageSize)
+  body.push("pageNumber", pageNumber);
+  body.push("maxItems", await service.totalEntries(query, queryOptions));
+
+
+  
+
+  res.status(200).send(body);
 });
 
 // @desc      Get single user

@@ -24,10 +24,10 @@ export const getReviews = asyncHandler(async (req: Request, res: Response, next:
     });
   } else {
     //all reviews from all bootcamps
-    const {pageSize, pageNumber} = req.body;
+    const {pageSize, pageNumber, sort} = req.body;
 
     let query = req.body.query;
-    const queryOptions: QueryOptions = {populate: "bootcamp", pageSize: pageSize, pageNumber: pageNumber};
+    const queryOptions: QueryOptions = {populate: "bootcamp", pageSize: pageSize, pageNumber: pageNumber, sort: sort};
 
 
     const service = new ReviewService();
@@ -37,7 +37,13 @@ export const getReviews = asyncHandler(async (req: Request, res: Response, next:
       return res.status(404).send("No Reviews founded!");
     }
 
-    res.status(200).send(result);
+    let body:any = result;
+
+    body.push("pageSize", pageSize)
+    body.push("pageNumber", pageNumber);
+    body.push("maxItems", await service.totalEntries(query, queryOptions));
+  
+    res.status(200).send(body);
   }
 });
 
@@ -45,10 +51,7 @@ export const getReviews = asyncHandler(async (req: Request, res: Response, next:
 // @route     GET /api/v1/reviews/:id
 // @access    Public
 export const getReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const review = await ReviewModel.findById(req.params.id).populate({
-    path: 'bootcamp',
-    select: 'name description'
-  });
+  const review = await ReviewModel.find({_id: req.params.id});
 
   if (!review) {
     return next(
