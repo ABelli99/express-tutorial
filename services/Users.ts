@@ -8,33 +8,11 @@ export interface QueryOptions {
     sort?: string
 }
 
-type UserKey = keyof User;
-let CheckUser: UserKey;
-
-
-
-const keysofUser: string[] = [
-    "name",
-    "email",
-    "role",
-    "password",
-    "resetPasswordToken",
-    "resetPasswordExpire",
-    "confirmEmailToken",
-    "isEmailConfirmed",
-    "twoFactorCode",
-    "twoFactorCodeExpire",
-    "twoFactorEnable",
-    "createdAt"
-];
-
 export class UserService {
 
     constructor() {};
 
     users = UserModel;
-    
-    
 
     public async find(query: object, queryOptions: QueryOptions): Promise<User[]> {
         const result = this.users
@@ -53,9 +31,16 @@ export class UserService {
             test.replace(/-/g,"")
                 .split(" ")
                 .forEach(n => {
-                    if(CheckUser=n){
-                        throw new ErrorResponse(`cannot sort for ${n} property because ${n} is not a property of User`, 406)
-                    }
+                    console.log(this.users.schema.paths.hasOwnProperty(n));
+                    if(!this.users.schema.paths.hasOwnProperty(n)){
+                        if(n == ""){
+                            throw new ErrorResponse("there are two consecutive spaces or"
+                            +"there is a space at the start or the end of the string, "
+                            +"Teapot", 418);
+                        }
+                        throw new ErrorResponse(`cannot sort for ${n} property because `
+                        +`${n} is not a property of User`, 406)
+                     }
                 });
 
             result.sort(queryOptions.sort);
