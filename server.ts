@@ -18,11 +18,11 @@ dotenv.config({ path: './config/config.env' });
 
 connectDB();
 
-import bootcamps from './routes/bootcamps';
-import courses from './routes/courses';
-import auth from './routes/auth';
-import users from './routes/users';
-import reviews from './routes/reviews';
+import bootcamps from './routes/BootcampRouter';
+import courses from './routes/CourseRouter';
+import auth from './routes/AuthRouter';
+import users from './routes/UserRouter';
+import reviews from './routes/ReviewRouter';
 
 const app: Express = express();
 

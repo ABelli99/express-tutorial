@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Request, NextFunction } from 'express';
-import UserModel, { User } from '../models/User';
-import ErrorResponse from '../utils/errorResponse';
+import UserModel, { User } from '../models/UserModel';
+import ErrorResponse from '../utils/ErrorResponseUtils';
 
 
 export async function getUserFromRequest(req: Request, next: NextFunction): Promise<User>{

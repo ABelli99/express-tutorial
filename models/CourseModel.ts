@@ -1,10 +1,10 @@
 import mongoose, { Model, Schema } from 'mongoose';
 
-import Bootcamp from './Bootcamp';
+import Bootcamp from './BootcampModel';
 export interface Course extends mongoose.Document {
   title: string;
   description: string;
-  weeks: string;
+  weeks: number;
   tuition: number;
   minimumSkill: string;
   scholarshipAvailable: boolean;
@@ -25,7 +25,7 @@ const CourseSchema: Schema<Course> = new Schema({
     required: [true, 'Please add a description']
   },
   weeks: {
-    type: String,
+    type: Number,
     required: [true, 'Please add number of weeks']
   },
   tuition: {

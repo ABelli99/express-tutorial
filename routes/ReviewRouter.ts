@@ -5,9 +5,9 @@ import {
   addReview,
   updateReview,
   deleteReview
-} from '../controllers/reviews';
+} from '../controllers/ReviewController';
 
-import Review from '../models/Review';
+import Review from '../models/ReviewModel';
 
 import  advancedResults  from '../middleware/advancedResults';
 import { protect, authorize } from '../middleware/auth';

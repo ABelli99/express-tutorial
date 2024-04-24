@@ -1,16 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import ErrorResponse from '../utils/errorResponse';
+import ErrorResponse from '../utils/ErrorResponseUtils';
 import asyncHandler from '../middleware/async';
-import CourseModel, { Course } from '../models/Course';
-import Bootcamp from '../models/Bootcamp';
-import { CourseService, QueryOptions } from '../services/Courses';
-import { getUserFromRequest } from '../services/Auths';
+import CourseModel, { Course } from '../models/CourseModel';
+import Bootcamp from '../models/BootcampModel';
+import { CourseService, QueryOptions } from '../services/CourseService';
+import { getUserFromRequest } from '../services/AuthService';
 import { CourseDTO } from '../DTO/CourseDTO';
 // @desc      Get courses
 // @route     GET /api/v1/courses
 // @route     GET /api/v1/bootcamps/:bootcampId/courses
 // @access    Public
 export const getCourses = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+
+  const {pageSize, pageNumber, sort} = req.body;
 
   //all courses from single bootcamp
   if (req.params.bootcampId) {
@@ -22,9 +24,8 @@ export const getCourses = asyncHandler(async (req: Request, res: Response, next:
       data: courses
     });
   }else {
+    
     //all course from all bootcamps
-    const {pageSize, pageNumber, sort} = req.body;
-
     let query = req.body.query;
     const queryOptions: QueryOptions = {populate: "bootcamp", pageSize: pageSize, pageNumber: pageNumber, sort: sort};
 

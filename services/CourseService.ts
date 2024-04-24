@@ -1,22 +1,23 @@
-import ReviewModel, {Review} from "../models/Review";
-import { getSortQuery } from "../utils/sort";
+import CourseModel, {Course} from "../models/CourseModel";
+import ErrorResponse from "../utils/ErrorResponseUtils";
+import { isValidSort, propertyExistsIn } from "../utils/sortChecks";
 
 export interface QueryOptions {
     pageSize: number
     pageNumber: number
-    sort?: JSON
+    sort?: string[]
     populate?: string
 }
 
-export class ReviewService {
+export class CourseService {
 
     constructor() {};
 
-    reviews = ReviewModel;
+    courses = CourseModel;
     
 
-    public async find(query: object, queryOptions: QueryOptions): Promise<Review[]> {
-        const result = this.reviews
+    public async find(query: object, queryOptions: QueryOptions): Promise<Course[]> {
+        const result = this.courses
         .find(query)
         .skip(queryOptions.pageSize*(queryOptions.pageNumber-1))
         .limit(queryOptions.pageSize);
@@ -25,9 +26,12 @@ export class ReviewService {
             result.populate(queryOptions.populate);
         }
 
+        //if exists
         if(queryOptions.sort){  
-            result.sort(getSortQuery(queryOptions.sort));
-        } else {
+            if(isValidSort(this.courses.schema, queryOptions.sort)){
+                result.sort(queryOptions.sort.toString());
+            }
+        }else {
             result.sort('-createdAt');
         }
 
@@ -36,7 +40,7 @@ export class ReviewService {
 
     
     public async totalEntries(query: object, queryOptions: QueryOptions): Promise<number>{
-        const result = this.reviews
+        const result = this.courses
         .countDocuments()
         return await result.exec();
     }

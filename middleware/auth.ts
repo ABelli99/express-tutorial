@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import asyncHandler from './async';
-import ErrorResponse from '../utils/errorResponse';
-import UserModel, { User } from '../models/User';
+import ErrorResponse from '../utils/ErrorResponseUtils';
+import UserModel, { User } from '../models/UserModel';
 import { Request, Response, NextFunction } from 'express';
 
 // Protect routes

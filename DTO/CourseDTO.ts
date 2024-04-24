@@ -3,7 +3,7 @@ import { Schema } from "mongoose";
 export interface CourseDTO {
     title: string;
     description: string;
-    weeks: string;
+    weeks: number;
     tuition: number;
     minimumSkill: string;
     scholarshipAvailable: boolean;

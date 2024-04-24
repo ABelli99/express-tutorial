@@ -1,13 +1,13 @@
 import path from 'path';
 import slugify from "slugify";
 import { Request, Response, NextFunction } from 'express';
-import ErrorResponse from '../utils/errorResponse';
+import ErrorResponse from '../utils/ErrorResponseUtils';
 import asyncHandler from '../middleware/async';
-import geocoder from '../utils/geocoder';
-import BootcampModel, { Bootcamp } from '../models/Bootcamp';
+import geocoder from '../utils/GeocoderUtils';
+import BootcampModel, { Bootcamp } from '../models/BootcampModel';
 import { UploadedFile } from 'express-fileupload';
-import { BootcampService, QueryOptions } from '../services/Bootcamps';
-import { getUserFromRequest } from '../services/Auths';
+import { BootcampService, QueryOptions } from '../services/BootcampService';
+import { getUserFromRequest } from '../services/AuthService';
 import { BootcampDTO } from '../DTO/BootcampDTO';
 
 // @desc      Get all bootcamps

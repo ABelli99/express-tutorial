@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import ErrorResponse from '../utils/errorResponse';
+import ErrorResponse from '../utils/ErrorResponseUtils';
 import asyncHandler from '../middleware/async';
-import UserModel, {User} from '../models/User';
-import { UserService, QueryOptions } from '../services/Users';
+import UserModel, {User} from '../models/UserModel';
+import { UserService, QueryOptions } from '../services/UserService';
 import { UserDTO } from '../DTO/UserDTO';
 
 

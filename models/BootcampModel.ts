@@ -1,9 +1,9 @@
 import mongoose, { Schema, Model } from 'mongoose';
 import slugify from 'slugify';
-import geocoder from '../utils/geocoder';
+import geocoder from '../utils/GeocoderUtils';
 
-import Course from './Course';
-import Review from './Review';
+import Course from './CourseModel';
+import Review from './ReviewModel';
 
 export interface Bootcamp extends mongoose.Document {
   _id: Schema.Types.ObjectId

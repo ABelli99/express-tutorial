@@ -1,10 +1,10 @@
 import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
-import ErrorResponse from '../utils/errorResponse';
+import ErrorResponse from '../utils/ErrorResponseUtils';
 import asyncHandler from '../middleware/async';
-import sendEmail from '../utils/sendEmail';
-import UserModel from '../models/User';
-import { getUserFromRequest } from '../services/Auths';
+import sendEmail from '../utils/SendEmailUtils';
+import UserModel from '../models/UserModel';
+import { getUserFromRequest } from '../services/AuthService';
 
 // @desc      Register user
 // @route     POST /api/v1/auth/register

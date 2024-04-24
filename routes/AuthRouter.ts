@@ -9,7 +9,7 @@ import {
   updateDetails,
   updatePassword,
   confirmEmail,
-} from '../controllers/auth';
+} from '../controllers/AuthController';
 import { protect } from '../middleware/auth';
 
 const router: Router = express.Router();

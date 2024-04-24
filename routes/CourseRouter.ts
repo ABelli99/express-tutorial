@@ -5,9 +5,9 @@ import {
   addCourse,
   updateCourse,
   deleteCourse
-} from '../controllers/courses';
+} from '../controllers/CourseController';
 
-import Course from '../models/Course';
+import Course from '../models/CourseModel';
 
 const router: Router = express.Router({ mergeParams: true });
 

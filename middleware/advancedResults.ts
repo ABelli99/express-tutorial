@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import Bootcamp from '../models/Bootcamp';
-import User from '../models/User';
-import Course from '../models/Course';
-import Review from '../models/Review';
+import Bootcamp from '../models/BootcampModel';
+import User from '../models/UserModel';
+import Course from '../models/CourseModel';
+import Review from '../models/ReviewModel';
 import { Model } from 'mongoose';
 
 //typeof Bootcamp | typeof Course | typeof Review | typeof User

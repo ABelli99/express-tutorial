@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import ErrorResponse from '../utils/errorResponse';
+import ErrorResponse from '../utils/ErrorResponseUtils';
 import asyncHandler from '../middleware/async';
-import ReviewModel, { Review } from '../models/Review';
-import Bootcamp from '../models/Bootcamp';
-import { ReviewService, QueryOptions } from '../services/Reviews';
-import { getUserFromRequest } from '../services/Auths';
+import ReviewModel, { Review } from '../models/ReviewModel';
+import Bootcamp from '../models/BootcampModel';
+import { ReviewService, QueryOptions } from '../services/ReviewService';
+import { getUserFromRequest } from '../services/AuthService';
 import { ReviewDTO } from '../DTO/ReviewDTO';
+import { isValidSort } from '../utils/sortChecks';
 
 
 // @desc      Get reviews
@@ -13,38 +14,44 @@ import { ReviewDTO } from '../DTO/ReviewDTO';
 // @route     GET /api/v1/bootcamps/:bootcampId/reviews
 // @access    Public
 export const getReviews = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  
+  const service = new ReviewService();
+  let result: Review[] | undefined = undefined;
+  let query: any
+  const {pageSize, pageNumber, sort} = req.body;
+  const queryOptions: QueryOptions = {populate: "bootcamp", pageSize: pageSize, pageNumber: pageNumber, sort: sort};
+
+  if(!isValidSort(ReviewModel.schema, sort)){
+    return res.status(400).send("Bad sort args!");
+  }
+
   //all reviews from single bootcamp
   if (req.params.bootcampId) {
-    const reviews = await ReviewModel.find({ bootcamp: req.params.bootcampId });
-
-    return res.status(200).json({
-      success: true,
-      count: reviews.length,
-      data: reviews
-    });
-  } else {
-    //all reviews from all bootcamps
-    const {pageSize, pageNumber, sort} = req.body;
-
+    let query = { bootcamp: req.params.bootcampId };
+    const result = await service.find(query, queryOptions);
+  } else {//all reviews from all bootcamp
     let query = req.body.query;
-    const queryOptions: QueryOptions = {populate: "bootcamp", pageSize: pageSize, pageNumber: pageNumber, sort: sort};
-
-
-    const service = new ReviewService();
-
-    const result: Review[] = await service.find(query, queryOptions);
-    if (!result) {
-      return res.status(404).send("No Reviews founded!");
-    }
-
-    let body:any = result;
-
-    body.push("pageSize", pageSize)
-    body.push("pageNumber", pageNumber);
-    body.push("maxItems", await service.totalEntries(query, queryOptions));
-  
-    res.status(200).send(body);
+    result = await service.find(query, queryOptions);
+  } 
+  if (!result) {
+    return res.status(404).send("No Reviews founded!");
   }
+  if(!result.length){
+    return res.status(418).json({
+      success: false,
+      reason: "Empty sort array! You are a Teapot"
+    })
+  }
+
+  let maxItems = await service.totalEntries(query, queryOptions);
+  return res.status(200).json({
+    success: true,
+    pageNumber: pageNumber,
+    pageSize: pageSize,
+    maxItems: maxItems,
+    count: result.length,
+    data: result
+  });
 });
 
 // @desc      Get single review

@@ -5,9 +5,9 @@ import {
   createUser,
   updateUser,
   deleteUser
-} from '../controllers/users';
+} from '../controllers/UserController';
 
-import User from '../models/User';
+import User from '../models/UserModel';
 
 import { protect, authorize } from '../middleware/auth';
 import advancedResults from '../middleware/advancedResults';

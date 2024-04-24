@@ -7,13 +7,13 @@ import {
   deleteBootcamp,
   getBootcampsInRadius,
   bootcampPhotoUpload
-} from '../controllers/bootcamps';
+} from '../controllers/BootcampController';
 
-import Bootcamp from '../models/Bootcamp';
+import Bootcamp from '../models/BootcampModel';
 
 // Include other resource routers
-import courseRouter from './courses';
-import reviewRouter from './reviews';
+import courseRouter from './CourseRouter';
+import reviewRouter from './ReviewRouter';
 
 const router: Router = express.Router();
 

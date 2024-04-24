@@ -1,10 +1,11 @@
-import BootcampModel, {Bootcamp} from "../models/Bootcamp";
-import { getSortQuery } from "../utils/sort";
+import BootcampModel, {Bootcamp} from "../models/BootcampModel";
+import ErrorResponse from "../utils/ErrorResponseUtils";
+import { propertyExistsIn } from "../utils/sortChecks";
 
 export interface QueryOptions {
     pageSize: number
     pageNumber: number
-    sort?: JSON
+    sort?: string
     populate?: string
 }
 
@@ -26,7 +27,19 @@ export class BootcampService {
         }
 
         if(queryOptions.sort){  
-            result.sort(getSortQuery(queryOptions.sort));
+            switch (propertyExistsIn(queryOptions.sort, this.bootcamps.schema)) {
+                //success
+                case 0:
+                    result.sort(queryOptions.sort);
+                    break;
+                case 1:
+                    throw new ErrorResponse(`cannot sort for ${queryOptions.sort} property `
+                        +`because there is something that is not a property of Bootcamp`, 406);
+                case -1:
+                    throw new ErrorResponse("there are two consecutive spaces or"
+                        +"there is a space at the start or the end of the string, "
+                        +"Teapot", 418);
+            }
         } else {
             result.sort('-createdAt');
         }
