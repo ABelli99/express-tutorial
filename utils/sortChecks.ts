@@ -25,7 +25,7 @@ export function propertyExistsIn<T extends Schema>(n:string, schema:T):number {
     return flag;
 }
 
-export function isValidSort<T extends Schema>(schema: T, options: string[]): boolean {
+export function isValidSort<T extends Schema>(schema: T, options: string[] | string): boolean {
 
     //if there isn't an options[] is valid
     if (!options.length){

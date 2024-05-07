@@ -3,10 +3,11 @@ import ErrorResponse from '../utils/ErrorResponseUtils';
 import asyncHandler from '../middleware/async';
 import ReviewModel, { Review } from '../models/ReviewModel';
 import Bootcamp from '../models/BootcampModel';
-import { ReviewService, QueryOptions } from '../services/ReviewService';
+import { ReviewService } from '../services/ReviewService';
 import { getUserFromRequest } from '../services/AuthService';
 import { ReviewDTO } from '../DTO/ReviewDTO';
 import { isValidSort } from '../utils/sortChecks';
+import { QueryOptions } from '../utils/QueryOptions';
 
 
 // @desc      Get reviews
@@ -27,10 +28,10 @@ export const getReviews = asyncHandler(async (req: Request, res: Response, next:
 
   //all reviews from single bootcamp
   if (req.params.bootcampId) {
-    let query = { bootcamp: req.params.bootcampId };
+    query = { bootcamp: req.params.bootcampId };
     const result = await service.find(query, queryOptions);
-  } else {//all reviews from all bootcamp
-    let query = req.body.query;
+  }else {//all reviews from all bootcamp
+    query = req.body.query;
     result = await service.find(query, queryOptions);
   } 
   if (!result) {
@@ -38,18 +39,15 @@ export const getReviews = asyncHandler(async (req: Request, res: Response, next:
   }
   if(!result.length){
     return res.status(418).json({
-      success: false,
       reason: "Empty sort array! You are a Teapot"
     })
   }
 
-  let maxItems = await service.totalEntries(query, queryOptions);
+  let totalDocuments = await service.totalEntries(query, queryOptions);
   return res.status(200).json({
-    success: true,
     pageNumber: pageNumber,
     pageSize: pageSize,
-    maxItems: maxItems,
-    count: result.length,
+    totalDocuments: totalDocuments,
     data: result
   });
 });
@@ -58,18 +56,18 @@ export const getReviews = asyncHandler(async (req: Request, res: Response, next:
 // @route     GET /api/v1/reviews/:id
 // @access    Public
 export const getReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const review = await ReviewModel.find({_id: req.params.id});
+  const service = new ReviewService();
+  const review = 
+  //await ReviewModel.find({_id: req.params.id});
+  await service.findById(req.params.id)
 
-  if (!review) {
+  if (review.totalDocuments == 0) {
     return next(
       new ErrorResponse(`No review found with the id of ${req.params.id}`, 404)
     );
   }
 
-  res.status(200).json({
-    success: true,
-    data: review
-  });
+  res.status(200).json(review);
 });
 
 // @desc      Add review

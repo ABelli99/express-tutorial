@@ -3,9 +3,10 @@ import ErrorResponse from '../utils/ErrorResponseUtils';
 import asyncHandler from '../middleware/async';
 import CourseModel, { Course } from '../models/CourseModel';
 import Bootcamp from '../models/BootcampModel';
-import { CourseService, QueryOptions } from '../services/CourseService';
+import { CourseService } from '../services/CourseService';
 import { getUserFromRequest } from '../services/AuthService';
 import { CourseDTO } from '../DTO/CourseDTO';
+import { QueryOptions } from '../repositories/GenericRepo';
 // @desc      Get courses
 // @route     GET /api/v1/courses
 // @route     GET /api/v1/bootcamps/:bootcampId/courses

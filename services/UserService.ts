@@ -1,13 +1,7 @@
 import UserModel, {User} from "../models/UserModel";
 import ErrorResponse from "../utils/ErrorResponseUtils";
+import { QueryOptions } from "../utils/QueryOptions";
 import { propertyExistsIn } from "../utils/sortChecks";
-
-export interface QueryOptions {
-    pageSize: number
-    pageNumber: number
-    populate?: string
-    sort?: string
-}
 
 export class UserService {
 

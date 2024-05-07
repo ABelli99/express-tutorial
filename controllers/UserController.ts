@@ -2,8 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import ErrorResponse from '../utils/ErrorResponseUtils';
 import asyncHandler from '../middleware/async';
 import UserModel, {User} from '../models/UserModel';
-import { UserService, QueryOptions } from '../services/UserService';
+import { UserService } from '../services/UserService';
 import { UserDTO } from '../DTO/UserDTO';
+import { QueryOptions } from '../repositories/GenericRepo';
 
 
 // @desc      Get all users

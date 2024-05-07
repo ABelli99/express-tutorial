@@ -1,13 +1,7 @@
 import CourseModel, {Course} from "../models/CourseModel";
 import ErrorResponse from "../utils/ErrorResponseUtils";
+import { QueryOptions } from "../utils/QueryOptions";
 import { isValidSort, propertyExistsIn } from "../utils/sortChecks";
-
-export interface QueryOptions {
-    pageSize: number
-    pageNumber: number
-    sort?: string[]
-    populate?: string
-}
 
 export class CourseService {
 

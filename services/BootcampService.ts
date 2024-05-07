@@ -1,13 +1,7 @@
 import BootcampModel, {Bootcamp} from "../models/BootcampModel";
 import ErrorResponse from "../utils/ErrorResponseUtils";
+import { QueryOptions } from "../utils/QueryOptions";
 import { propertyExistsIn } from "../utils/sortChecks";
-
-export interface QueryOptions {
-    pageSize: number
-    pageNumber: number
-    sort?: string
-    populate?: string
-}
 
 export class BootcampService {
 

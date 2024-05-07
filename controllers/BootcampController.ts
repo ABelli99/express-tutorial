@@ -6,9 +6,10 @@ import asyncHandler from '../middleware/async';
 import geocoder from '../utils/GeocoderUtils';
 import BootcampModel, { Bootcamp } from '../models/BootcampModel';
 import { UploadedFile } from 'express-fileupload';
-import { BootcampService, QueryOptions } from '../services/BootcampService';
+import { BootcampService } from '../services/BootcampService';
 import { getUserFromRequest } from '../services/AuthService';
 import { BootcampDTO } from '../DTO/BootcampDTO';
+import { QueryOptions } from '../repositories/GenericRepo';
 
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
